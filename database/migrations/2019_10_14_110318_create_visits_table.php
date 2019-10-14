@@ -15,6 +15,7 @@ class CreateVisitsTable extends Migration
     {
         Schema::create('visits', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('method')->nullable();
             $table->mediumText('request')->nullable();
             $table->mediumText('url')->nullable();
             $table->mediumText('referer')->nullable();
@@ -26,6 +27,7 @@ class CreateVisitsTable extends Migration
             $table->text('browser')->nullable();
             $table->text('ip')->nullable();
             $table->nullableMorphs('visitable');
+            $table->nullableMorphs('user');
             $table->timestamps();
         });
     }

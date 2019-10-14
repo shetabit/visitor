@@ -19,9 +19,10 @@ class Visit extends Model
      * @var array
      */
     protected $fillable = [
-        'request', 'url', 'referer',
+        'method', 'request', 'url', 'referer',
         'languages', 'useragent', 'headers',
         'device', 'platform', 'browser', 'ip',
+        'user_id', 'user_type',
     ];
 
     /**
@@ -37,9 +38,21 @@ class Visit extends Model
 
     /**
      * Get the owning visitable model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
     public function visitable()
     {
-        return $this->morphTo();
+        return $this->morphTo('visitable');
+    }
+
+    /**
+     * Get the owning user model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
+     */
+    public function user()
+    {
+        return $this->morphTo('user');
     }
 }

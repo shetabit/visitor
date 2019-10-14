@@ -134,6 +134,16 @@ class JenssegersAgent implements Driver
     }
 
     /**
+     * Retrieve request's method.
+     *
+     * @return string
+     */
+    public function method() : string
+    {
+        return $this->request->getMethod();
+    }
+
+    /**
      * Initialize userAgent parser.
      *
      * @return Agent

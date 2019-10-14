@@ -180,6 +180,16 @@ class Visitor implements Driver
     }
 
     /**
+     * Retrieve request's method.
+     *
+     * @return string
+     */
+    public function method() : string
+    {
+        return $this->getDriverInstance()->method();
+    }
+
+    /**
      * Create a visit log.
      *
      * @param Model $model
@@ -190,6 +200,7 @@ class Visitor implements Driver
             $visit = $model->visit();
         } else {
             $visit = Visit::create([
+                'method' => $this->method(),
                 'request' => $this->request(),
                 'url' => $this->url(),
                 'referer' => $this->referer(),
@@ -200,6 +211,8 @@ class Visitor implements Driver
                 'platform' => $this->platform(),
                 'browser' => $this->browser(),
                 'ip' => $this->ip(),
+                'user_id' => request()->user() ? request()->user()->id : null,
+                'user_type' => request()->user() ? get_class(request()->user()): null
             ]);
         }
 

@@ -2,13 +2,14 @@
 
 namespace Shetabit\Visitor\Traits;
 
+use Illuminate\Support\Facades\Auth;
 use Shetabit\Visitor\Models\Visit;
 use Illuminate\Database\Eloquent\Builder;
 
 trait Visitable
 {
     /**
-     * Get all of the post's comments.
+     * Get all of the model visits' log.
      *
      * @return mixed
      */
@@ -26,7 +27,8 @@ trait Visitable
     {
         $visitor = app('shetabit-visitor');
 
-        return $this->visits()->create([
+        $visit = $this->visits()->create([
+            'method' => $visitor->method(),
             'request' => $visitor->request(),
             'url' => $visitor->url(),
             'referer' => $visitor->referer(),
@@ -37,7 +39,11 @@ trait Visitable
             'platform' => $visitor->platform(),
             'browser' => $visitor->browser(),
             'ip' => $visitor->ip(),
+            'user_id' => request()->user() ? request()->user()->id : null,
+            'user_type' => request()->user() ? get_class(request()->user()): null
         ]);
+
+        return $visit;
     }
 
     /**

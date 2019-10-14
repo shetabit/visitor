@@ -61,7 +61,7 @@ interface Driver
     public  function ip() : ?string;
 
     /**
-     * Retrieve request's url
+     * Retrieve request's url.
      *
      * @return string
      */
@@ -69,9 +69,16 @@ interface Driver
 
 
     /**
-     * Retrieve request's referer
+     * Retrieve request's referer.
      *
      * @return string|null
      */
     public function referer() : ?string;
+
+    /**
+     * Retrieve request's method.
+     *
+     * @return string
+     */
+    public function method() : string;
 }
