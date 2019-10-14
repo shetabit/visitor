@@ -146,13 +146,37 @@ class Visitor implements Driver
     /**
      * Retrieve user's ip.
      *
+     * @return string|null
+     *
+     * @throws \Exception
+     */
+    public  function ip() : ?string
+    {
+        return $this->getDriverInstance()->ip();
+    }
+
+    /**
+     * Retrieve request's url
+     *
      * @return string
      *
      * @throws \Exception
      */
-    public  function ip() : string
+    public function url() : string
     {
-        return $this->getDriverInstance()->ip();
+        return $this->getDriverInstance()->url();
+    }
+
+    /**
+     * Retrieve request's referer
+     *
+     * @return string|null
+     *
+     * @throws \Exception
+     */
+    public function referer() : ?string
+    {
+        return $this->getDriverInstance()->referer();
     }
 
     /**
@@ -167,6 +191,8 @@ class Visitor implements Driver
         } else {
             $visit = Visit::create([
                 'request' => $this->request(),
+                'url' => $this->url(),
+                'referer' => $this->referer(),
                 'languages' => $this->languages(),
                 'useragent' => $this->userAgent(),
                 'headers' => $this->httpHeaders(),

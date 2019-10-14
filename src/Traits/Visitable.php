@@ -3,6 +3,7 @@
 namespace Shetabit\Visitor\Traits;
 
 use Shetabit\Visitor\Models\Visit;
+use Illuminate\Database\Eloquent\Builder;
 
 trait Visitable
 {
@@ -17,7 +18,7 @@ trait Visitable
     }
 
     /**
-     * Create a visit log
+     * Create a visit log.
      *
      * @return mixed
      */
@@ -27,6 +28,8 @@ trait Visitable
 
         return $this->visits()->create([
             'request' => $visitor->request(),
+            'url' => $visitor->url(),
+            'referer' => $visitor->referer(),
             'languages' => $visitor->languages(),
             'useragent' => $visitor->userAgent(),
             'headers' => $visitor->httpHeaders(),

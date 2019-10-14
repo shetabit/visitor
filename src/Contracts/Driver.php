@@ -58,5 +58,20 @@ interface Driver
      *
      * @return string|null
      */
-    public  function ip() : string;
+    public  function ip() : ?string;
+
+    /**
+     * Retrieve request's url
+     *
+     * @return string
+     */
+    public function url() : string;
+
+
+    /**
+     * Retrieve request's referer
+     *
+     * @return string|null
+     */
+    public function referer() : ?string;
 }

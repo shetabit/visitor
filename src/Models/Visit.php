@@ -19,9 +19,9 @@ class Visit extends Model
      * @var array
      */
     protected $fillable = [
-        'request', 'languages', 'useragent',
-        'headers', 'device', 'platform',
-        'browser', 'ip',
+        'request', 'url', 'referer',
+        'languages', 'useragent', 'headers',
+        'device', 'platform', 'browser', 'ip',
     ];
 
     /**

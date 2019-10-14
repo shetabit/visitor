@@ -108,9 +108,29 @@ class JenssegersAgent implements Driver
      *
      * @return string|null
      */
-    public  function ip() : string
+    public  function ip() : ?string
     {
         return $this->request->ip();
+    }
+
+    /**
+     * Retrieve request's url
+     *
+     * @return string
+     */
+    public function url() : string
+    {
+        return $this->request->fullUrl();
+    }
+
+    /**
+     * Retrieve request's referer
+     *
+     * @return string|null
+     */
+    public function referer() : ?string
+    {
+        return $_SERVER['HTTP_REFERER'] ?? null;
     }
 
     /**

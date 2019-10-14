@@ -16,6 +16,8 @@ class CreateVisitsTable extends Migration
         Schema::create('visits', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->mediumText('request')->nullable();
+            $table->mediumText('url')->nullable();
+            $table->mediumText('referer')->nullable();
             $table->text('languages')->nullable();
             $table->text('useragent')->nullable();
             $table->text('headers')->nullable();
