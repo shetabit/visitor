@@ -25,6 +25,16 @@ class VisitorServiceProvider extends ServiceProvider
             'config'
         );
 
+        /**
+         * Migrations that needs to be done by user.
+         */
+        $this->publishes(
+            [
+                __DIR__.'/../../database/migrations/' => database_path('migrations')
+            ],
+            'migrations'
+        );
+
         $this->registerMacroHelpers();
     }
 

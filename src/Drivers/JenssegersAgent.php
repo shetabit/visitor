@@ -34,6 +34,16 @@ class JenssegersAgent implements Driver
     }
 
     /**
+     * Retrieve request's data
+     *
+     * @return array
+     */
+    public function request() : array
+    {
+        return $this->request->all();
+    }
+
+    /**
      * Retrieve agent.
      *
      * @return string

@@ -5,6 +5,13 @@ namespace Shetabit\Visitor\Contracts;
 interface Driver
 {
     /**
+     * Retrieve request's data
+     *
+     * @return array
+     */
+    public function request() : array;
+
+    /**
      * Retrieve agent.
      *
      * @return string

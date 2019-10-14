@@ -2,8 +2,10 @@
 
 namespace Shetabit\Visitor;
 
+use Illuminate\Database\Eloquent\Model;
 use Shetabit\Visitor\Contracts\Driver;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
+use Shetabit\Visitor\Models\Visit;
 
 class Visitor implements Driver
 {
@@ -57,6 +59,16 @@ class Visitor implements Driver
         $this->validateDriver();
 
         return $this;
+    }
+
+    /**
+     * Retrieve request's data
+     *
+     * @return array
+     */
+    public function request() : array
+    {
+        return $this->getDriverInstance()->request();
     }
 
     /**
@@ -141,6 +153,41 @@ class Visitor implements Driver
     public  function ip() : string
     {
         return $this->getDriverInstance()->ip();
+    }
+
+    /**
+     * Create a visit log.
+     *
+     * @param Model $model
+     */
+    public function visit(Model $model = null)
+    {
+        if (method_exists($model,  'visit')) {
+            $visit = $model->visit();
+        } else {
+            $visit = Visit::create([
+                'request' => $this->request(),
+                'languages' => $this->languages(),
+                'useragent' => $this->userAgent(),
+                'headers' => $this->httpHeaders(),
+                'device' => $this->device(),
+                'platform' => $this->platform(),
+                'browser' => $this->browser(),
+                'ip' => $this->ip(),
+            ]);
+        }
+
+        return $visit;
+    }
+
+    /**
+     * Alias for visit.
+     *
+     * @param Model $model
+     */
+    public function view(Model $model)
+    {
+        return $this->visit($model);
     }
 
     /**
