@@ -1,4 +1,4 @@
-<p align="center"><img src="resources/images/visitor.png?raw=true"></p>
+<p align="center"><img width="200" src="resources/images/visitor.png?raw=true"></p>
 
 
 
