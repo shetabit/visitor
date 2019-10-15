@@ -20,7 +20,7 @@ return [
     | You can create your own driver if you like and add the
     | config in the drivers array and the class to use for
     | here with the same name. You will have to implement
-    | Shetabit\Visitor\Contracts\Driver in your driver.
+    | Shetabit\Visitor\Contracts\UserAgentParser in your driver.
     |
     */
     'drivers' => [

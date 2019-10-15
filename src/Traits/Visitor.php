@@ -6,16 +6,28 @@ use Illuminate\Support\Facades\Auth;
 use Shetabit\Visitor\Models\Visit;
 use Illuminate\Database\Eloquent\Builder;
 
-trait CanVisit
+trait Visitor
 {
     /**
      * Get all of the post's comments.
      *
      * @return mixed
      */
-    public function visitLogs()
+    public function visits()
     {
-        return $this->morphMany(Visit::class, 'user');
+        return $this->morphMany(Visit::class, 'visitor');
+    }
+
+    /**
+     * Create a visit log.
+     *
+     * @param Model|null $visitable
+     *
+     * @return mixed
+     */
+    public function visit(?Model $visitable = null)
+    {
+        return app('shetabit-visitor')->setVisitor($this)->visit($visitable);
     }
 
     /**
@@ -29,7 +41,7 @@ trait CanVisit
     {
         $time = now()->subSeconds($seconds);
 
-        return $query->whereHas('visitLogs', function ($query) use ($time) {
+        return $query->whereHas('visits', function ($query) use ($time) {
             $query->whereDate('visits.created_at', '>=', $time);
         });
     }
@@ -44,9 +56,9 @@ trait CanVisit
     {
         $time = now()->subSeconds($seconds);
 
-        return $this->visitLogs()->whereHasMorph('user', [static::class], function ($query) use ($time) {
+        return $this->visits()->whereHasMorph('visitor', [static::class], function ($query) use ($time) {
             $query
-                ->where('user_id', $this->id)
+                ->where('visitor_id', $this->id)
                 ->whereDate('visits.created_at', '>=', $time);
         })->count() > 0;
     }

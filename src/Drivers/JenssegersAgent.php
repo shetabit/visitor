@@ -4,9 +4,9 @@ namespace Shetabit\Visitor\Drivers;
 
 use Illuminate\Http\Request;
 use Jenssegers\Agent\Agent;
-use Shetabit\Visitor\Contracts\Driver;
+use Shetabit\Visitor\Contracts\UserAgentParser;
 
-class JenssegersAgent implements Driver
+class JenssegersAgent implements UserAgentParser
 {
     /**
      * Request container.
@@ -31,36 +31,6 @@ class JenssegersAgent implements Driver
     {
         $this->request = $request;
         $this->parser = $this->initParser();
-    }
-
-    /**
-     * Retrieve request's data
-     *
-     * @return array
-     */
-    public function request() : array
-    {
-        return $this->request->all();
-    }
-
-    /**
-     * Retrieve agent.
-     *
-     * @return string
-     */
-    public function userAgent() : string
-    {
-        return $this->request->userAgent();
-    }
-
-    /**
-     * Retrieve http headers.
-     *
-     * @return array
-     */
-    public function httpHeaders() : array
-    {
-        return $this->request->headers->all();
     }
 
     /**
@@ -104,46 +74,6 @@ class JenssegersAgent implements Driver
     }
 
     /**
-     * Retrieve user's ip.
-     *
-     * @return string|null
-     */
-    public  function ip() : ?string
-    {
-        return $this->request->ip();
-    }
-
-    /**
-     * Retrieve request's url
-     *
-     * @return string
-     */
-    public function url() : string
-    {
-        return $this->request->fullUrl();
-    }
-
-    /**
-     * Retrieve request's referer
-     *
-     * @return string|null
-     */
-    public function referer() : ?string
-    {
-        return $_SERVER['HTTP_REFERER'] ?? null;
-    }
-
-    /**
-     * Retrieve request's method.
-     *
-     * @return string
-     */
-    public function method() : string
-    {
-        return $this->request->getMethod();
-    }
-
-    /**
      * Initialize userAgent parser.
      *
      * @return Agent
@@ -152,8 +82,8 @@ class JenssegersAgent implements Driver
     {
         $parser = new Agent();
 
-        $parser->setUserAgent($this->userAgent());
-        $parser->setHttpHeaders($this->httpHeaders());
+        $parser->setUserAgent($this->request->userAgent());
+        $parser->setHttpHeaders($this->request->headers);
 
         return $parser;
     }

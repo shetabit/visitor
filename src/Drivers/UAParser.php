@@ -4,9 +4,9 @@ namespace Shetabit\Visitor\Drivers;
 
 use UAParser\Parser;
 use Illuminate\Http\Request;
-use Shetabit\Visitor\Contracts\Driver;
+use Shetabit\Visitor\Contracts\UserAgentParser;
 
-class UAParser implements Driver
+class UAParser implements UserAgentParser
 {
     /**
      * Request container.
@@ -33,36 +33,6 @@ class UAParser implements Driver
     {
         $this->request = $request;
         $this->parser = $this->initParser();
-    }
-
-    /**
-     * Retrieve request's data
-     *
-     * @return array
-     */
-    public function request() : array
-    {
-        return $this->request->all();
-    }
-
-    /**
-     * Retrieve agent.
-     *
-     * @return string
-     */
-    public function userAgent() : string
-    {
-        return $this->request->userAgent();
-    }
-
-    /**
-     * Retrieve http headers.
-     *
-     * @return array
-     */
-    public function httpHeaders() : array
-    {
-        return $this->request->headers->all();
     }
 
     /**
@@ -110,46 +80,6 @@ class UAParser implements Driver
         }
 
         return $languages;
-    }
-
-    /**
-     * Retrieve user's ip.
-     *
-     * @return string|null
-     */
-    public  function ip() : ?string
-    {
-        return $this->request->ip();
-    }
-
-    /**
-     * Retrieve request's url
-     *
-     * @return string
-     */
-    public function url() : string
-    {
-        return $this->request->fullUrl();
-    }
-
-    /**
-     * Retrieve request's referer
-     *
-     * @return string|null
-     */
-    public function referer() : ?string
-    {
-        return $_SERVER['HTTP_REFERER'] ?? null;
-    }
-
-    /**
-     * Retrieve request's method.
-     *
-     * @return string
-     */
-    public function method() : string
-    {
-        return $this->request->getMethod();
     }
 
     /**

@@ -22,7 +22,7 @@ class Visit extends Model
         'method', 'request', 'url', 'referer',
         'languages', 'useragent', 'headers',
         'device', 'platform', 'browser', 'ip',
-        'user_id', 'user_type',
+        'visitor_id', 'visitor_type',
     ];
 
     /**
@@ -51,8 +51,8 @@ class Visit extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
-    public function user()
+    public function visitor()
     {
-        return $this->morphTo('user');
+        return $this->morphTo('visitor');
     }
 }

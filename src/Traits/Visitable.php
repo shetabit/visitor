@@ -9,11 +9,11 @@ use Illuminate\Database\Eloquent\Builder;
 trait Visitable
 {
     /**
-     * Get all of the model visits' log.
+     * Get all of the model visit logs.
      *
      * @return mixed
      */
-    public function visits()
+    public function visitLogs()
     {
         return $this->morphMany(Visit::class, 'visitable');
     }
@@ -21,48 +21,12 @@ trait Visitable
     /**
      * Create a visit log.
      *
-     * @return mixed
-     */
-    public function visit()
-    {
-        $visitor = app('shetabit-visitor');
-
-        $visit = $this->visits()->create([
-            'method' => $visitor->method(),
-            'request' => $visitor->request(),
-            'url' => $visitor->url(),
-            'referer' => $visitor->referer(),
-            'languages' => $visitor->languages(),
-            'useragent' => $visitor->userAgent(),
-            'headers' => $visitor->httpHeaders(),
-            'device' => $visitor->device(),
-            'platform' => $visitor->platform(),
-            'browser' => $visitor->browser(),
-            'ip' => $visitor->ip(),
-            'user_id' => request()->user() ? request()->user()->id : null,
-            'user_type' => request()->user() ? get_class(request()->user()): null
-        ]);
-
-        return $visit;
-    }
-
-    /**
-     * Alias for visits.
+     * @param Model|null $visitor
      *
      * @return mixed
      */
-    public function views()
+    public function createVisitLog(?Model $visitor)
     {
-        return $this->visits();
-    }
-
-    /**
-     * Alias for visit
-     *
-     * @return mixed
-     */
-    public function view()
-    {
-        return $this->visit();
+        return app('shetabit-visitor')->setVisitor($visitor)->visit($this);
     }
 }

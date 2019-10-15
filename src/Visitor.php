@@ -3,11 +3,12 @@
 namespace Shetabit\Visitor;
 
 use Illuminate\Database\Eloquent\Model;
-use Shetabit\Visitor\Contracts\Driver;
+use Illuminate\Http\Request;
+use Shetabit\Visitor\Contracts\UserAgentParser;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
 use Shetabit\Visitor\Models\Visit;
 
-class Visitor implements Driver
+class Visitor implements UserAgentParser
 {
     /**
      * Configuration.
@@ -17,18 +18,32 @@ class Visitor implements Driver
     protected $config;
 
     /**
-     * Driver Name.
+     * Driver name.
      *
      * @var string
      */
     protected $driver;
 
     /**
-     * Driver Instance.
+     * Driver instance.
      *
      * @var object
      */
     protected $driverInstance;
+
+    /**
+     * Request instance.
+     *
+     * @var Request
+     */
+    protected $request;
+
+    /**
+     * Visitor (user) instance.
+     *
+     * @var Model|null
+     */
+    protected $visitor;
 
     /**
      * Visitor constructor.
@@ -37,11 +52,13 @@ class Visitor implements Driver
      *
      * @throws \Exception
      */
-    public function __construct($config)
+    public function __construct(Request $request, $config)
     {
+        $this->request = $request;
         $this->config = $config;
 
         $this->via($this->config['default']);
+        $this->setVisitor($request->user());
     }
 
     /**
@@ -68,31 +85,67 @@ class Visitor implements Driver
      */
     public function request() : array
     {
-        return $this->getDriverInstance()->request();
+        return $this->request->all();
     }
 
     /**
-     * Retrieve agent.
+     * Retrieve user's ip.
+     *
+     * @return string|null
+     */
+    public  function ip() : ?string
+    {
+        return $this->request->ip();
+    }
+
+    /**
+     * Retrieve request's url
      *
      * @return string
-     *
-     * @throws \Exception
      */
-    public function userAgent() : string
+    public function url() : string
     {
-        return $this->getDriverInstance()->userAgent();
+        return $this->request->fullUrl();
+    }
+
+    /**
+     * Retrieve request's referer
+     *
+     * @return string|null
+     */
+    public function referer() : ?string
+    {
+        return $_SERVER['HTTP_REFERER'] ?? null;
+    }
+
+    /**
+     * Retrieve request's method.
+     *
+     * @return string
+     */
+    public function method() : string
+    {
+        return $this->request->getMethod();
     }
 
     /**
      * Retrieve http headers.
      *
      * @return array
-     *
-     * @throws \Exception
      */
     public function httpHeaders() : array
     {
-        return $this->getDriverInstance()->httpHeaders();
+        return $this->request->headers->all();
+    }
+
+    /**
+     * Retrieve agent.
+     *
+     * @return string
+     */
+    public function userAgent() : string
+    {
+        return $this->request->userAgent();
     }
 
     /**
@@ -144,49 +197,27 @@ class Visitor implements Driver
     }
 
     /**
-     * Retrieve user's ip.
+     * Set visitor (user)
      *
-     * @return string|null
+     * @param Model|null $user
      *
-     * @throws \Exception
+     * @return $this
      */
-    public  function ip() : ?string
+    public function setVisitor(?Model $user)
     {
-        return $this->getDriverInstance()->ip();
+        $this->visitor = $user;
+
+        return $this;
     }
 
     /**
-     * Retrieve request's url
+     * Retrieve visitor (user)
      *
-     * @return string
-     *
-     * @throws \Exception
+     * @return Model|null
      */
-    public function url() : string
+    public function getVisitor() : ?Model
     {
-        return $this->getDriverInstance()->url();
-    }
-
-    /**
-     * Retrieve request's referer
-     *
-     * @return string|null
-     *
-     * @throws \Exception
-     */
-    public function referer() : ?string
-    {
-        return $this->getDriverInstance()->referer();
-    }
-
-    /**
-     * Retrieve request's method.
-     *
-     * @return string
-     */
-    public function method() : string
-    {
-        return $this->getDriverInstance()->method();
+        return $this->visitor;
     }
 
     /**
@@ -196,37 +227,75 @@ class Visitor implements Driver
      */
     public function visit(Model $model = null)
     {
-        if (method_exists($model,  'visit')) {
-            $visit = $model->visit();
+        $data = $this->prepareLog();
+
+        if (method_exists($model, 'visitLogs')) {
+            $visit = $model->visitLogs()->create($data);
         } else {
-            $visit = Visit::create([
-                'method' => $this->method(),
-                'request' => $this->request(),
-                'url' => $this->url(),
-                'referer' => $this->referer(),
-                'languages' => $this->languages(),
-                'useragent' => $this->userAgent(),
-                'headers' => $this->httpHeaders(),
-                'device' => $this->device(),
-                'platform' => $this->platform(),
-                'browser' => $this->browser(),
-                'ip' => $this->ip(),
-                'user_id' => request()->user() ? request()->user()->id : null,
-                'user_type' => request()->user() ? get_class(request()->user()): null
-            ]);
+            $visit = Visit::create($data);
         }
 
         return $visit;
     }
 
     /**
-     * Alias for visit.
+     * Retrieve online visitors.
      *
-     * @param Model $model
+     * @param string $model
+     * @param int $seconds
      */
-    public function view(Model $model)
+    public function onlineVisitors(string $model, $seconds = 180)
     {
-        return $this->visit($model);
+        return app($model)->online()->get();
+    }
+
+    /**
+     * Determine if given visitor or current one is online.
+     *
+     * @param Model|null $visitor
+     * @param int $seconds
+     *
+     * @return bool
+     */
+    public function isOnline(?Model $visitor = null, $seconds = 180)
+    {
+        $time = now()->subSeconds($seconds);
+
+        $visitor = $visitor ?? $this->getVisitor();
+
+        if (empty($visitor)) {
+            return false;
+        }
+
+        return Visit::whereHasMorph('visitor', get_class($visitor), function ($query) use ($visitor, $time) {
+            $query->where('visitor_id', $visitor->id);
+        })->whereDate('created_at', '>=', $time)->count() > 0;
+    }
+
+    /**
+     * Prepare log's data.
+     *
+     * @return array
+     *
+     * @throws \Exception
+     */
+    protected function prepareLog() : array
+    {
+        return [
+            'method' => $this->method(),
+            'request' => $this->request(),
+            'url' => $this->url(),
+            'referer' => $this->referer(),
+            'languages' => $this->languages(),
+            'useragent' => $this->userAgent(),
+            'headers' => $this->httpHeaders(),
+            'device' => $this->device(),
+            'platform' => $this->platform(),
+            'browser' => $this->browser(),
+            'ip' => $this->ip(),
+            'visitor_id' => $this->getVisitor() ? $this->getVisitor()->id : null,
+            'visitor_type' => $this->getVisitor() ? get_class($this->getVisitor()): null
+        ];
     }
 
     /**
@@ -280,7 +349,7 @@ class Visitor implements Driver
 
         $reflect = new \ReflectionClass($driverClass);
 
-        if (!$reflect->implementsInterface(Driver::class)) {
+        if (!$reflect->implementsInterface(UserAgentParser::class)) {
             throw new \Exception("Driver must be an instance of Contracts\Driver.");
         }
     }

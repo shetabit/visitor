@@ -56,7 +56,9 @@ class VisitorServiceProvider extends ServiceProvider
          * Bind to service container.
          */
         $this->app->singleton('shetabit-visitor', function () {
-            return new Visitor(config('visitor'));
+            $request = app(Request::class);
+
+            return new Visitor($request, config('visitor'));
         });
     }
 

@@ -7,6 +7,8 @@
 
 this is a laravel package to extract and access visitors' information such as `browser`, `ip`, `device` and etc.
 
+**in this package, you can recognize online users and determine if a user is online or not**
+
 ### Install
 
 via composer
@@ -46,33 +48,60 @@ we have the below methods to retrieve a visitor's information:
 - `ip` : client's ip
 - `request` : the whole request inputs
 - `useragent` : the whole useragent
+- `isOnline` : determines if current (or given) user is online
 
 #### Store Logs
 
 you can create logs using the `visit` method like the below
 
 ```php
-visitor()->visit();
+visitor()->visit(); // create a visit log
 ```
 
 use `Shetabit\Visitor\Traits\Visitable` trait in your models, then you can save visit's log for your models like the below
 
 ```php
-visitor()->visit($model);
 // or you can save log like the below
-$model->visit();
-// or you can do it like the below
-$model->view();
+visitor()->visit($model);
+// or like the below
+$model->createVisitLog();
+
+// you can say which user has visited the given $model
+$model->createVisitLog($user);
+// or like the below
+visitor()->setVisitor($user)->visit($model);
+
 ```
 
 model views can be loaded using `visits` relation.
 you can count model visits like the below
 
 ```php
-$model->visits()->count();
+$model->visitLogs()->count();
 ```
 
-#### Automatic loging
+use `Shetabit\Visitor\Traits\Visitor` in your `User` class, then you can run below codes
+
+ ```php
+$user->visit(); // create a visit log
+$user->visit($model); // create a log which says, $user has visited $model
+ ```
+
+#### Retrieve and Determine Online users
+
+use `Shetabit\Visitor\Traits\Visitor` in your `User` class at first.
+
+then you can retrieve online users which are instance of `User` class and determine if a user is online.
+
+```php
+visitor()->onlineVisitors(User::class); // returns collection of online users
+User::online()->get(); // another way
+
+visitor()->isOnline($user); // determines if the given user is online
+$user->isOnline(); // another way
+```
+
+#### Automatic logging
 
 your application can store visitor's log automatically using `LogVisits` middleware.
 
