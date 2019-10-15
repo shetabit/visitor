@@ -50,6 +50,12 @@ we have the below methods to retrieve a visitor's information:
 - `useragent` : the whole useragent
 - `isOnline` : determines if current (or given) user is online
 
+```php
+$request->visitor()->browser(); // firefox
+$request->visitor()->visit($post); // create log for post
+$request->visitor()->setVisitor($user)->visit($post); // create a log wich says $user has visited $post
+```
+
 #### Store Logs
 
 you can create logs using the `visit` method like the below
