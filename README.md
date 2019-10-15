@@ -35,6 +35,14 @@ If you are using Laravel 5.5 or higher then you don't need to add the provider a
 ],
 ```
 
+then, run the below commands to publish migrations and create tables
+
+```bash
+php artisan vendor:publish
+
+php artisan migrate
+```
+
 ### How to use
 
 you can access to `visitor's information` using `$request->visitor()` in your controllers , and  you can access to the visitor's information using `visitor()` helper function any where.
