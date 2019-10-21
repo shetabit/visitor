@@ -31,7 +31,7 @@ If you are using Laravel 5.5 or higher then you don't need to add the provider a
 # In your aliases array.
 'aliases' => [
     ...
-    'Payment' => Shetabit\Visitor\Facade\Visitor::class,
+    'Visitor' => Shetabit\Visitor\Facade\Visitor::class,
 ],
 ```
 
