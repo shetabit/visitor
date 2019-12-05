@@ -145,7 +145,7 @@ class Visitor implements UserAgentParser
      */
     public function userAgent() : string
     {
-        return $this->request->userAgent();
+        return $this->request->userAgent() ?? '';
     }
 
     /**
