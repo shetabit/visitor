@@ -91,6 +91,15 @@ You can count model visits like the below
 ```php
 $model->visitLogs()->count();
 ```
+unique users can be counted by their IP and by model.
+
+```php
+// by ip
+$model->visitLogs()->distinct('ip')->count('ip');
+
+// by user's model
+$model->visitLogs()->visitor()->count();
+```
 
 use `Shetabit\Visitor\Traits\Visitor` in your `User` class, then you can run below codes
 
