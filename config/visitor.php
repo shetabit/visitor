@@ -11,6 +11,9 @@ return [
     */
     'default' => 'jenssegers',
 
+    //except save request or route names
+    'except' =>  ['login','register'],
+
     /*
     |--------------------------------------------------------------------------
     | List of Drivers

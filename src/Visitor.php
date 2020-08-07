@@ -11,6 +11,12 @@ use Shetabit\Visitor\Models\Visit;
 class Visitor implements UserAgentParser
 {
     /**
+     * except.
+     *
+     * @var array
+     */
+    protected $except ;
+    /**
      * Configuration.
      *
      * @var array
@@ -56,7 +62,7 @@ class Visitor implements UserAgentParser
     {
         $this->request = $request;
         $this->config = $config;
-
+        $this->except = $config['except'];
         $this->via($this->config['default']);
         $this->setVisitor($request->user());
     }
@@ -228,6 +234,9 @@ class Visitor implements UserAgentParser
     public function visit(Model $model = null)
     {
         $data = $this->prepareLog();
+        if(in_array($this->request->path(),$this->except)){
+            unset($data['request']);
+        }  
 
         if (method_exists($model, 'visitLogs')) {
             $visit = $model->visitLogs()->create($data);
