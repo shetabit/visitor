@@ -14,6 +14,10 @@ return [
     //except save request or route names
     'except' =>  ['login','register'],
 
+
+    //name of the table which visit records should save in
+    'table_name' =>  'shetabit_visits',
+
     /*
     |--------------------------------------------------------------------------
     | List of Drivers

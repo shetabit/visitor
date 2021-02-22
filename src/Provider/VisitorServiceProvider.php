@@ -25,15 +25,14 @@ class VisitorServiceProvider extends ServiceProvider
             'config'
         );
 
-        /**
-         * Migrations that needs to be done by user.
-         */
-        $this->publishes(
-            [
-                __DIR__.'/../../database/migrations/' => database_path('migrations')
-            ],
-            'migrations'
-        );
+        if (! class_exists('CreateVisitsTable')) {
+            $timestamp = date('Y_m_d_His', time());
+
+            $this->publishes([
+                __DIR__ . '/../../database/migrations/create_visits_table.php.stub' => database_path("/migrations/{$timestamp}_create_visits_table.php"),
+            ], 'migrations');
+        }
+
 
         $this->registerMacroHelpers();
     }

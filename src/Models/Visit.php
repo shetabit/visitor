@@ -6,13 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Visit extends Model
 {
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'visits';
-
+    public function __construct(array $attributes = [])
+    {
+        if (!isset($this->table)) {
+            $this->setTable(config('visitor.table_name'));
+        }
+        parent::__construct($attributes);
+    }
     /**
      * The attributes that aren't mass assignable.
      *
@@ -31,9 +31,9 @@ class Visit extends Model
      * @var array
      */
     protected $casts = [
-        'request' => 'array',
+        'request'   => 'array',
         'languages' => 'array',
-        'headers' => 'array',
+        'headers'   => 'array',
     ];
 
     /**
