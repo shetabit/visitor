@@ -58,7 +58,7 @@ We have the below methods to retrieve a visitor's information:
 ```php
 $request->visitor()->browser(); // firefox
 $request->visitor()->visit($post); // create log for post
-$request->visitor()->setVisitor($user)->visit($post); // create a log wich says $user has visited $post
+$request->visitor()->setVisitor($user)->visit($post); // create a log which says $user has visited $post
 ```
 
 #### Store Logs
