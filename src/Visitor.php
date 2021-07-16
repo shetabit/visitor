@@ -238,7 +238,7 @@ class Visitor implements UserAgentParser
             unset($data['request']);
         }  
 
-        if (method_exists($model, 'visitLogs')) {
+        if (null !== $model && method_exists($model, 'visitLogs')) {
             $visit = $model->visitLogs()->create($data);
         } else {
             $visit = Visit::create($data);
