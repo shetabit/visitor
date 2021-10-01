@@ -15,7 +15,7 @@ class Visitor implements UserAgentParser
      *
      * @var array
      */
-    protected $except ;
+    protected $except;
     /**
      * Configuration.
      *
@@ -233,10 +233,11 @@ class Visitor implements UserAgentParser
      */
     public function visit(Model $model = null)
     {
-        $data = $this->prepareLog();
-        if(in_array($this->request->path(),$this->except)){
-            unset($data['request']);
+        if(in_array($this->request->path(), $this->except)){
+            return;
         }  
+
+        $data = $this->prepareLog();
 
         if (null !== $model && method_exists($model, 'visitLogs')) {
             $visit = $model->visitLogs()->create($data);
