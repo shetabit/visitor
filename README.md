@@ -49,7 +49,7 @@ We have the below methods to retrieve a visitor's information:
 - `device` : device's name
 - `platform` : platform's name
 - `browser` : browser's name
-- `languages` : langauge's name
+- `languages` : language's name
 - `ip` : client's ip
 - `request` : the whole request inputs
 - `useragent` : the whole useragent
