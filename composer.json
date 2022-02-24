@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/support": "^5.1|6.*|7.*|8.*",
+        "illuminate/support": "^5.1|6.*|7.*|8.*|9.*",
         "jenssegers/agent" : "^2.6",
         "ua-parser/uap-php": "^3.9"
     },
