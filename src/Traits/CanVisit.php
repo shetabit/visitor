@@ -14,7 +14,7 @@ trait CanVisit
      */
     public function visitLogs()
     {
-        return $this->morphMany(Visit::class, 'visitor');
+        return $this->morphMany(Visit::class, 'user');
     }
 
     /**
