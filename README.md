@@ -129,3 +129,8 @@ Your application can store visitor's log automatically using `LogVisits` middlew
 Add the `Shetabit\Visitor\Middlewares\LogVisits` middleware if you want to save logs automatically.
 
 The middleware will store logs for models which has binded in router (router model binding) and has used `Shetabit\Visitor\Traits\Visitable` trait.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=shetabit/visitor&type=Date)](https://star-history.com/#shetabit/visitor&Date)
+
