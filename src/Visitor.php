@@ -233,9 +233,12 @@ class Visitor implements UserAgentParser
      */
     public function visit(Model $model = null)
     {
-        if(in_array($this->request->path(), $this->except)){
-            return;
-        }  
+        foreach ($this->except as $path) {
+            if ($this->request->is($path)) {
+                return;
+            }
+        }
+
 
         $data = $this->prepareLog();
 
