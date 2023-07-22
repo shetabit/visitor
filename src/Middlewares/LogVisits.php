@@ -8,34 +8,52 @@ use Illuminate\Support\Facades\Auth;
 
 class LogVisits
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     *
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
-    {
-        $logHasSaved = false;
+  /**
+   * Handle an incoming request.
+   *
+   * @param  \Illuminate\Http\Request  $request
+   * @param  \Closure  $next
+   *
+   * @return mixed
+   */
+  public function handle($request, Closure $next)
+  {
+      if(session()->has('visit')) {
+          $visitData = session()->get('visit');
 
-        // create log for first binded model
-        foreach ($request->route()->parameters() as $parameter) {
-            if ($parameter instanceof Model) {
-                visitor()->visit($parameter);
+          if($visitData['ip'] != $request->ip() || $visitData['url'] != $request->url()) {
+              $this->logVisit($request);
+          }
+      } else {
+          $this->logVisit($request);
+      }
 
-                $logHasSaved = true;
+      return $next($request);
+  }
 
-                break;
-            }
-        }
+  public function logVisit($request) {
 
-        // create log for normal visits
-        if (!$logHasSaved) {
-            visitor()->visit();
-        }
+      $logHasSaved = false;
 
-        return $next($request);
-    }
+      session(['visit' => [
+          'ip' => $request->ip(),
+          'url' => $request->url(),
+      ]]);
+
+      // create log for first binded model
+      foreach ($request->route()->parameters() as $parameter) {
+          if ($parameter instanceof Model) {
+              visitor()->visit($parameter);
+
+              $logHasSaved = true;
+
+              break;
+          }
+      }
+
+      // create log for normal visits
+      if (!$logHasSaved) {
+          visitor()->visit();
+      }
+  }
 }
