@@ -93,7 +93,7 @@ class UAParser implements UserAgentParser
     {
         $parser = Parser::create();
 
-        $result = $parser->parse($this->userAgent());
+        $result = $parser->parse($this->request->userAgent());
 
         return $result;
     }
