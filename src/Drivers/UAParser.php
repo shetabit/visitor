@@ -10,17 +10,13 @@ class UAParser implements UserAgentParser
 {
     /**
      * Request container.
-     *
-     * @var Request
      */
-    protected $request;
+    protected Request $request;
 
     /**
      * Agent parser.
-     *
-     * @var \UAParser\Result\Client
      */
-    protected $parser;
+    protected \UAParser\Result\Client $parser;
 
     /**
      * UAParser constructor.
@@ -37,8 +33,6 @@ class UAParser implements UserAgentParser
 
     /**
      * Retrieve device's name.
-     *
-     * @return string
      */
     public function device() : string
     {
@@ -47,8 +41,6 @@ class UAParser implements UserAgentParser
 
     /**
      * Retrieve platform's name.
-     *
-     * @return string
      */
     public function platform() : string
     {
@@ -57,8 +49,6 @@ class UAParser implements UserAgentParser
 
     /**
      * Retrieve browser's name.
-     *
-     * @return string
      */
     public function browser() : string
     {
@@ -67,8 +57,6 @@ class UAParser implements UserAgentParser
 
     /**
      * Retrieve languages.
-     *
-     * @return array
      */
     public function languages() : array
     {
@@ -76,7 +64,7 @@ class UAParser implements UserAgentParser
 
         if (!empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
             $lang = substr($_SERVER['HTTP_ACCEPT_LANGUAGE'], 0, 2);
-            array_push($languages, $lang);
+            $languages[] = $lang;
         }
 
         return $languages;
@@ -85,16 +73,10 @@ class UAParser implements UserAgentParser
     /**
      * Initialize userAgent parser.
      *
-     * @return \UAParser\Result\Client
-     *
      * @throws \UAParser\Exception\FileNotFoundException
      */
-    protected function initParser()
+    protected function initParser(): \UAParser\Result\Client
     {
-        $parser = Parser::create();
-
-        $result = $parser->parse($this->request->userAgent());
-
-        return $result;
+        return Parser::create()->parse($this->request->userAgent());
     }
 }

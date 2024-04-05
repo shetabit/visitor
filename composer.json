@@ -20,10 +20,11 @@
         }
     ],
     "require": {
-        "php": ">=7.2",
-        "illuminate/support": "^5.1|6.*|7.*|8.*|9.*|10.*|^11.*",
-        "jenssegers/agent" : "^2.6.4",
-        "ua-parser/uap-php": "^3.9"
+        "php": ">=8.0",
+        "illuminate/support": "9.*|10.*|11.*",
+        "ua-parser/uap-php": "^3.9",
+        "mobiledetect/mobiledetectlib": "^4.8",
+        "jaybizzle/crawler-detect": "^1.2"
     },
     "require-dev": {
         "orchestra/testbench": "^4.0",

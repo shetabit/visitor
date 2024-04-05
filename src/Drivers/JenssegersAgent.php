@@ -3,24 +3,20 @@
 namespace Shetabit\Visitor\Drivers;
 
 use Illuminate\Http\Request;
-use Jenssegers\Agent\Agent;
+use Shetabit\Visitor\Agent;
 use Shetabit\Visitor\Contracts\UserAgentParser;
 
 class JenssegersAgent implements UserAgentParser
 {
     /**
      * Request container.
-     *
-     * @var Request
      */
-    protected $request;
+    protected Request $request;
 
     /**
      * Agent parser.
-     *
-     * @var Agent
      */
-    protected $parser;
+    protected Agent $parser;
 
     /**
      * Parser constructor.
@@ -35,8 +31,6 @@ class JenssegersAgent implements UserAgentParser
 
     /**
      * Retrieve device's name.
-     *
-     * @return string
      */
     public function device() : string
     {
@@ -45,8 +39,6 @@ class JenssegersAgent implements UserAgentParser
 
     /**
      * Retrieve platform's name.
-     *
-     * @return string
      */
     public function platform() : string
     {
@@ -55,8 +47,6 @@ class JenssegersAgent implements UserAgentParser
 
     /**
      * Retrieve browser's name.
-     *
-     * @return string
      */
     public function browser() : string
     {
@@ -65,8 +55,6 @@ class JenssegersAgent implements UserAgentParser
 
     /**
      * Retrieve languages.
-     *
-     * @return array
      */
     public function languages() : array
     {
@@ -75,15 +63,13 @@ class JenssegersAgent implements UserAgentParser
 
     /**
      * Initialize userAgent parser.
-     *
-     * @return Agent
      */
-    protected function initParser()
+    protected function initParser(): Agent
     {
         $parser = new Agent();
 
         $parser->setUserAgent($this->request->userAgent());
-        $parser->setHttpHeaders($this->request->headers);
+        $parser->setHttpHeaders((array)$this->request->headers);
 
         return $parser;
     }
