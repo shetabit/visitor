@@ -13,7 +13,7 @@ class VisitorServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         /**
          * Configurations that needs to be done by user.
@@ -39,17 +39,13 @@ class VisitorServiceProvider extends ServiceProvider
 
     /**
      * Register any package services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         /**
          * Load default configurations.
          */
-        $this->mergeConfigFrom(
-            __DIR__.'/../../config/visitor.php', 'visitor'
-        );
+        $this->mergeConfigFrom(__DIR__.'/../../config/visitor.php', 'visitor');
 
         /**
          * Bind to service container.
@@ -64,7 +60,7 @@ class VisitorServiceProvider extends ServiceProvider
     /**
      * Register micros
      */
-    protected function registerMacroHelpers()
+    protected function registerMacroHelpers(): void
     {
         Request::macro('visitor', function () {
             return app('shetabit-visitor');
