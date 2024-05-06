@@ -1,6 +1,6 @@
 <?php
 
-namespace Shetabit\Visitor\Agent;
+namespace Shetabit\Visitor\Provider;
 
 use Illuminate\Support\ServiceProvider;
 use Shetabit\Agent\Agent;
