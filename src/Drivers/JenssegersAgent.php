@@ -68,7 +68,7 @@ class JenssegersAgent implements UserAgentParser
     {
         $parser = new Agent();
 
-        $parser->setUserAgent($this->request->userAgent());
+        $parser->setUserAgent($this->request->userAgent() ?? "N/A");
         $parser->setHttpHeaders((array)$this->request->headers);
 
         return $parser;
