@@ -77,6 +77,6 @@ class UAParser implements UserAgentParser
      */
     protected function initParser(): \UAParser\Result\Client
     {
-        return Parser::create()->parse($this->request->userAgent());
+        return Parser::create()->parse($this->request->userAgent() ?? "N/A");
     }
 }
