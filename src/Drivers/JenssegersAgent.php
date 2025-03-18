@@ -67,10 +67,10 @@ class JenssegersAgent implements UserAgentParser
     protected function initParser(): Agent
     {
         $parser = new Agent();
-
-        $parser->setUserAgent($this->request->userAgent());
-        $parser->setHttpHeaders((array)$this->request->headers);
-
+        if( !empty($this->request) ){
+            $parser->setUserAgent($this->request->userAgent());
+            $parser->setHttpHeaders((array)$this->request->headers);
+        }
         return $parser;
     }
 }
