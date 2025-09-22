@@ -26,6 +26,7 @@ class CreateVisitsTable extends Migration
             $table->text('platform')->nullable();
             $table->text('browser')->nullable();
             $table->ipAddress('ip')->nullable();
+			$table->json('geo_raw')->nullable()->comment('Optional GeoIP payload (country_code, region, city, lat/lng, …)');
             $table->nullableMorphs('visitable'); // object model
             $table->nullableMorphs('visitor'); // subject model
             $table->timestamps();
