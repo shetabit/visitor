@@ -306,8 +306,8 @@ class Visitor implements UserAgentParser
             'platform' => $this->platform(),
             'browser' => $this->browser(),
             'ip' => $this->ip(),
-            'visitor_id' => $this->getVisitor() ? $this->getVisitor()->id : null,
-            'visitor_type' => $this->getVisitor() ? get_class($this->getVisitor()): null
+            'visitor_id' => $this->getVisitor()?->id,
+            'visitor_type' => $this->getVisitor()?->getMorphClass()
         ];
     }
 
