@@ -33,6 +33,12 @@ class VisitorServiceProvider extends ServiceProvider
             ], 'migrations');
         }
 
+		if (! class_exists('AddGeoColumnsToVisitsTable')) {
+			$this->publishes([
+				__DIR__.'/../../database/migrations/add_geo_columns_to_visits_table.php.stub'
+					=> database_path("migrations/{$timestamp}_add_geo_columns_to_visits_table.php"),
+			], 'migrations');
+		}
 
         $this->registerMacroHelpers();
     }
