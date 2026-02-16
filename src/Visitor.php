@@ -4,11 +4,11 @@ namespace Shetabit\Visitor;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Shetabit\Visitor\Contracts\UserAgentParser;
+use Shetabit\Visitor\Contracts\{UserAgentParser,GeoIpResolver};
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
 use Shetabit\Visitor\Models\Visit;
 
-class Visitor implements UserAgentParser
+class Visitor implements UserAgentParser, GeoIpResolver
 {
     /**
      * except.
@@ -36,6 +36,20 @@ class Visitor implements UserAgentParser
      * @var object
      */
     protected $driverInstance;
+    
+	/**
+     * Resolver name.
+     *
+     * @var string
+     */
+    protected $resolver;
+
+    /**
+     * Resolver instance.
+     *
+     * @var object
+     */
+    protected $resolverInstance;
 
     /**
      * Request instance.
@@ -63,23 +77,27 @@ class Visitor implements UserAgentParser
         $this->request = $request;
         $this->config = $config;
         $this->except = $config['except'];
-        $this->via($this->config['default']);
+        $this->via($this->config['default'], $this->config['resolver']);
         $this->setVisitor($request->user());
     }
 
     /**
-     * Change the driver on the fly.
+     * Change the driver and the resolver on the fly.
      *
      * @param $driver
+	 * @param $resolver
      *
      * @return $this
      *
      * @throws \Exception
      */
-    public function via($driver)
+    public function via($driver, $resolver)
     {
         $this->driver = $driver;
         $this->validateDriver();
+
+		$this->resolver = $Resolver;
+		$this->validateResolver();
 
         return $this;
     }
@@ -202,6 +220,27 @@ class Visitor implements UserAgentParser
         return $this->getDriverInstance()->languages();
     }
 
+	/**
+	* 
+	*/
+	public function resolve(string $ip): ?array
+	{
+		if(!($this->config['geoip'] ?? false)){
+			return null;
+		}
+		return $this->getResolverInstance()->resolve($ip);
+	}
+
+
+	/**
+	*
+	*/
+	public function geolocation(): ?array
+	{
+		$ip = $this->ip();
+		return $ip ? $this->resolve($ip) : null;
+	}
+
     /**
      * Set visitor (user)
      *
@@ -294,7 +333,7 @@ class Visitor implements UserAgentParser
      */
     protected function prepareLog() : array
     {
-        return [
+        $log =  [
             'method' => $this->method(),
             'request' => $this->request(),
             'url' => $this->url(),
@@ -309,6 +348,12 @@ class Visitor implements UserAgentParser
             'visitor_id' => $this->getVisitor()?->id,
             'visitor_type' => $this->getVisitor()?->getMorphClass()
         ];
+		
+		if(!empty($this->config['geoip'])) {
+			$log['geo_raw'] = $this->geolocation();
+		}
+		
+		return $log;
     }
 
     /**
@@ -364,6 +409,62 @@ class Visitor implements UserAgentParser
 
         if (!$reflect->implementsInterface(UserAgentParser::class)) {
             throw new \Exception("Driver must be an instance of Contracts\Driver.");
+        }
+    }
+
+    /**
+     * Retrieve current resolver instance or generate new one.
+     *
+     * @return mixed|object
+     *
+     * @throws \Exception
+     */
+    protected function getResolverInstance()
+    {
+        if (!empty($this->resolverInstance)) {
+            return $this->resolverInstance;
+        }
+
+        return $this->getFreshResolverInstance();
+    }
+
+    /**
+     * Get new resolver instance
+     *
+     * @return Resolver
+     *
+     * @throws \Exception
+     */
+    protected function getFreshResolverInstance()
+    {
+        $this->validateResolver();
+
+        $resolverClass = $this->config['resolvers'][$this->resolver];
+
+        return app($resolverClass);
+    }
+
+    /**
+     * Validate resolver.
+     *
+     * @throws \Exception
+     */
+    protected function validateResolver()
+    {
+        if (empty($this->resolver)) {
+            throw new ResolverNotFoundException('Resolver not selected or default resolver does not exist.');
+        }
+
+        $resolverClass = $this->config['resolvers'][$this->resolver];
+
+        if (empty($resolverClass) || !class_exists($resolverClass)) {
+            throw new ResolverNotFoundException('Resolver not found in config file. Try updating the package.');
+        }
+
+        $reflect = new \ReflectionClass($resolverClass);
+
+        if (!$reflect->implementsInterface(GeoIpResolver::class)) {
+            throw new \Exception("Resolver must be an instance of Contracts\Resolver.");
         }
     }
 }

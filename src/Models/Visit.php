@@ -22,7 +22,7 @@ class Visit extends Model
         'method', 'request', 'url', 'referer',
         'languages', 'useragent', 'headers',
         'device', 'platform', 'browser', 'ip',
-        'visitor_id', 'visitor_type',
+        'visitor_id', 'visitor_type', 'geo_raw',
     ];
 
     /**
@@ -34,6 +34,7 @@ class Visit extends Model
         'request'   => 'array',
         'languages' => 'array',
         'headers'   => 'array',
+		'geo_raw' => 'array',
     ];
 
     /**
