@@ -96,7 +96,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
         $this->driver = $driver;
         $this->validateDriver();
 
-		$this->resolver = $Resolver;
+		$this->resolver = $resolver;
 		$this->validateResolver();
 
         return $this;
