@@ -32,14 +32,6 @@ class VisitorServiceProvider extends ServiceProvider
             ], 'migrations');
         }
 
-		// add_geo_columns_to_visits_table is empty also $timestamp is undefined because of above condition.
-		// if (! class_exists('AddGeoColumnsToVisitsTable')) {
-		// 	$this->publishes([
-		// 		__DIR__.'/../../database/migrations/add_geo_columns_to_visits_table.php.stub'
-		// 			=> database_path("migrations/{$timestamp}_add_geo_columns_to_visits_table.php"),
-		// 	], 'migrations');
-		// }
-
         $this->registerMacroHelpers();
     }
 
