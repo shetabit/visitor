@@ -25,10 +25,17 @@ class VisitorServiceProvider extends ServiceProvider
             'config'
         );
 
-		$timestamp = date('Y_m_d_His', time());
+        $timestamp = date('Y_m_d_His', time());
+
         if (! class_exists('CreateVisitsTable')) {
             $this->publishes([
                 __DIR__ . '/../../database/migrations/create_visits_table.php.stub' => database_path("/migrations/{$timestamp}_create_visits_table.php"),
+            ], 'migrations');
+        }
+
+        if (! class_exists('AddGeoRawToVisitsTable')) {
+            $this->publishes([
+                __DIR__ . '/../../database/migrations/add_geo_raw_to_visits_table.php.stub' => database_path("/migrations/{$timestamp}_add_geo_raw_to_visits_table.php"),
             ], 'migrations');
         }
 
