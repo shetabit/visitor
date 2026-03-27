@@ -268,9 +268,9 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Create a visit log.
      *
-     * @param Model $model
+     * @param Model $model|null
      */
-    public function visit(Model $model = null)
+    public function visit(?Model $model = null)
     {
         foreach ($this->except as $path) {
             if ($this->request->is($path)) {
