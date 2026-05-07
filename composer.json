@@ -23,7 +23,7 @@
         "php": ">=8.0",
         "illuminate/support": "9.*|10.*|11.*|12.*|^13.0",
         "ua-parser/uap-php": "^3.9",
-        "mobiledetect/mobiledetectlib": ">=4.8 <4.9,
+        "mobiledetect/mobiledetectlib": ">=4.8 <4.9",
         "jaybizzle/crawler-detect": "^1.2"
     },
     "require-dev": {
