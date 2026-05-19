@@ -355,7 +355,7 @@ class Agent extends MobileDetect
     /**
      * @inheritdoc
      */
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments): bool
     {
         // Make sure the name starts with 'is', otherwise
         if (!str_starts_with($name, 'is')) {
