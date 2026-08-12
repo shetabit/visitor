@@ -14,7 +14,7 @@ This is a laravel package to extract and access visitors' information such as `b
 
 **In this package, you can recognize online users and determine if a user is online or not**
 
-This package requires `PHP 8.4+` and supports `Laravel 12` and `Laravel 13`.
+This package requires `PHP 8.4+` and supports `Laravel 12+`.
 
 ### Install
 
