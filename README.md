@@ -132,5 +132,5 @@ The middleware will store logs for models which has binded in router (router mod
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=shetabit/visitor&type=Date)](https://star-history.com/#shetabit/visitor&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=shetabit/visitor&type=Date)](https://star-history.dera.page/#shetabit/visitor&Date)
 
