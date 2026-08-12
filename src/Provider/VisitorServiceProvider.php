@@ -4,14 +4,13 @@ namespace Shetabit\Visitor\Provider;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
+use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
 use Shetabit\Visitor\Visitor;
 
 class VisitorServiceProvider extends ServiceProvider
 {
     /**
      * Perform post-registration booting of services.
-     *
-     * @return void
      */
     public function boot(): void
     {
@@ -20,24 +19,23 @@ class VisitorServiceProvider extends ServiceProvider
          */
         $this->publishes(
             [
-                __DIR__.'/../../config/visitor.php' => config_path('visitor.php'),
+                $this->packagePath('config/visitor.php') => config_path('visitor.php'),
             ],
-            'config'
+            ['config', 'visitor-config']
         );
 
-        $timestamp = date('Y_m_d_His', time());
-
-        if (! class_exists('CreateVisitsTable')) {
-            $this->publishes([
-                __DIR__ . '/../../database/migrations/create_visits_table.php.stub' => database_path("/migrations/{$timestamp}_create_visits_table.php"),
-            ], 'migrations');
-        }
-
-        if (! class_exists('AddGeoRawToVisitsTable')) {
-            $this->publishes([
-                __DIR__ . '/../../database/migrations/add_geo_raw_to_visits_table.php.stub' => database_path("/migrations/{$timestamp}_add_geo_raw_to_visits_table.php"),
-            ], 'migrations');
-        }
+        /**
+         * Migrations of the table the visits are logged in.
+         *
+         * The file names carry the order the migrations have to run in, which
+         * `vendor:publish` keeps.
+         */
+        $this->publishesMigrations(
+            [
+                $this->packagePath('database/migrations') => database_path('migrations'),
+            ],
+            ['migrations', 'visitor-migrations']
+        );
 
         $this->registerMacroHelpers();
     }
@@ -50,16 +48,23 @@ class VisitorServiceProvider extends ServiceProvider
         /**
          * Load default configurations.
          */
-        $this->mergeConfigFrom(__DIR__.'/../../config/visitor.php', 'visitor');
+        $this->mergeConfigFrom($this->packagePath('config/visitor.php'), 'visitor');
 
         /**
          * Bind to service container.
+         *
+         * The visitor is handed the request it works with while it is being
+         * built, so it is bound for the length of one request: a `singleton`
+         * would keep answering with the data of the first request a long
+         * running worker (Octane, a queue worker) handed it.
          */
-        $this->app->singleton('shetabit-visitor', function () {
-            $request = app(Request::class);
+        $this->app->scoped(
+            VisitorFacade::SERVICE_NAME,
+            static fn (): Visitor => new Visitor(app(Request::class), (array) config('visitor', []))
+        );
 
-            return new Visitor($request, config('visitor'));
-        });
+        // Allow the visitor to be resolved and injected by its class name too
+        $this->app->alias(VisitorFacade::SERVICE_NAME, Visitor::class);
     }
 
     /**
@@ -67,8 +72,14 @@ class VisitorServiceProvider extends ServiceProvider
      */
     protected function registerMacroHelpers(): void
     {
-        Request::macro('visitor', function () {
-            return app('shetabit-visitor');
-        });
+        Request::macro('visitor', fn (): Visitor => visitor());
+    }
+
+    /**
+     * The absolute path of the given file of the package.
+     */
+    private function packagePath(string $path): string
+    {
+        return dirname(__DIR__, 2).'/'.$path;
     }
 }

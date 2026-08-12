@@ -1,12 +1,14 @@
 <?php
+
+use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
+use Shetabit\Visitor\Visitor;
+
 if (!function_exists('visitor')) {
     /**
      * Access visitor through helper.
-     *
-     * @return \Shetabit\Visitor\Visitor
      */
-    function visitor()
+    function visitor(): Visitor
     {
-        return app('shetabit-visitor');
+        return app(VisitorFacade::SERVICE_NAME);
     }
 }

@@ -4,16 +4,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateVisitsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create(config('visitor.table_name'), function (Blueprint $table) {
+        Schema::create($this->table(), function (Blueprint $table): void {
             $table->bigIncrements('id');
             $table->string('method')->nullable();
             $table->mediumText('request')->nullable();
@@ -26,7 +24,6 @@ class CreateVisitsTable extends Migration
             $table->text('platform')->nullable();
             $table->text('browser')->nullable();
             $table->ipAddress('ip')->nullable();
-			$table->json('geo_raw')->nullable()->comment('Optional GeoIP payload (country_code, region, city, lat/lng, …)');
             $table->nullableMorphs('visitable'); // object model
             $table->nullableMorphs('visitor'); // subject model
             $table->timestamps();
@@ -35,11 +32,17 @@ class CreateVisitsTable extends Migration
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
-        Schema::dropIfExists(config('visitor.table_name'));
+        Schema::dropIfExists($this->table());
     }
-}
+
+    /**
+     * The name of the table of the visits.
+     */
+    private function table(): string
+    {
+        return (string) config('visitor.table_name');
+    }
+};

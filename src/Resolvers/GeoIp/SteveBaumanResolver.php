@@ -4,14 +4,18 @@ namespace Shetabit\Visitor\Resolvers\GeoIp;
 
 use Shetabit\Visitor\Contracts\GeoIpResolver;
 use Stevebauman\Location\Facades\Location;
+use Stevebauman\Location\Position;
 
 class SteveBaumanResolver implements GeoIpResolver
 {
-    public function resolve(string $ip): ?array
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function resolve(string $ip): array|null
     {
         $position = Location::get($ip);
 
-        if (!$position) {
+        if (!$position instanceof Position) {
             return null;
         }
 

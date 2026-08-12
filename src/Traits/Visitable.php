@@ -2,19 +2,23 @@
 
 namespace Shetabit\Visitor\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use Shetabit\Visitor\Models\Visit;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Shetabit\Visitor\Models\Visit;
 
+/**
+ * Turns a model into something that can be visited, a post for instance.
+ *
+ * @phpstan-require-extends Model
+ */
 trait Visitable
 {
     /**
      * Get all of the model visit logs.
      *
-     * @return mixed
+     * @return MorphMany<Visit, $this>
      */
-    public function visitLogs()
+    public function visitLogs(): MorphMany
     {
         return $this->morphMany(Visit::class, 'visitable');
     }
@@ -22,12 +26,11 @@ trait Visitable
     /**
      * Create a visit log.
      *
-     * @param Model|null $visitor
-     *
-     * @return mixed
+     * The visitor is optional: without one, the log only says that this model
+     * was visited.
      */
-    public function createVisitLog(?Model $visitor)
+    public function createVisitLog(Model|null $visitor = null): Visit|null
     {
-        return app('shetabit-visitor')->setVisitor($visitor)->visit($this);
+        return visitor()->setVisitor($visitor)->visit($this);
     }
 }

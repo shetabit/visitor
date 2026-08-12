@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<ruleset name="Visitor">
+    <description>The coding standard of the visitor package.</description>
+
+    <file>config</file>
+    <file>database</file>
+    <file>src</file>
+    <file>tests</file>
+
+    <!-- Show progress and sniff codes, and colorize the output. -->
+    <arg name="colors"/>
+    <arg value="ps"/>
+
+    <!-- The soft limit on the line length is a warning, it must not fail the build. -->
+    <config name="ignore_warnings_on_exit" value="1"/>
+
+    <rule ref="PSR2"/>
+
+    <!-- The migrations are anonymous classes a file returns, which is how Laravel wants them. -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>database/migrations/*</exclude-pattern>
+        <exclude-pattern>src/helpers\.php</exclude-pattern>
+    </rule>
+</ruleset>

@@ -6,7 +6,10 @@ use Shetabit\Visitor\Contracts\GeoIpResolver;
 
 class NullResolver implements GeoIpResolver
 {
-    public function resolve(string $ip): ?array
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function resolve(string $ip): array|null
     {
         return null;
     }

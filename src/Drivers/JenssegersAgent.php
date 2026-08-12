@@ -9,23 +9,15 @@ use Shetabit\Visitor\Contracts\UserAgentParser;
 class JenssegersAgent implements UserAgentParser
 {
     /**
-     * Request container.
-     */
-    protected Request $request;
-
-    /**
      * Agent parser.
      */
     protected Agent $parser;
 
     /**
      * Parser constructor.
-     *
-     * @param Request $request
      */
-    public function __construct(Request $request)
+    public function __construct(protected Request $request)
     {
-        $this->request = $request;
         $this->parser = $this->initParser();
     }
 
@@ -34,7 +26,7 @@ class JenssegersAgent implements UserAgentParser
      */
     public function device() : string
     {
-        return $this->parser->device();
+        return $this->stringify($this->parser->device());
     }
 
     /**
@@ -42,7 +34,7 @@ class JenssegersAgent implements UserAgentParser
      */
     public function platform() : string
     {
-        return $this->parser->platform();
+        return $this->stringify($this->parser->platform());
     }
 
     /**
@@ -50,11 +42,13 @@ class JenssegersAgent implements UserAgentParser
      */
     public function browser() : string
     {
-        return $this->parser->browser();
+        return $this->stringify($this->parser->browser());
     }
 
     /**
      * Retrieve languages.
+     *
+     * @return array<int, string>
      */
     public function languages() : array
     {
@@ -67,11 +61,24 @@ class JenssegersAgent implements UserAgentParser
     protected function initParser(): Agent
     {
         $parser = new Agent();
-        $userAgent = $this->request->userAgent() ?? '';
-        
-        $parser->setUserAgent($userAgent);
-        $parser->setHttpHeaders((array)$this->request->headers);    
-        
+
+        /**
+         * The parser expects the headers the way PHP hands them over
+         * (`HTTP_USER_AGENT`, `HTTP_ACCEPT_LANGUAGE`, …), which is what the
+         * server bag of the request holds. Handing them over resets the user
+         * agent of the parser, so it is set afterwards.
+         */
+        $parser->setHttpHeaders($this->request->server->all());
+        $parser->setUserAgent($this->request->userAgent() ?? '');
+
         return $parser;
+    }
+
+    /**
+     * The parser answers with `false` for what it could not detect.
+     */
+    private function stringify(bool|string $value) : string
+    {
+        return is_string($value) ? $value : '';
     }
 }

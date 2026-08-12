@@ -2,102 +2,80 @@
 
 namespace Shetabit\Visitor;
 
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Shetabit\Visitor\Contracts\{UserAgentParser,GeoIpResolver};
+use ReflectionClass;
+use Shetabit\Visitor\Contracts\GeoIpResolver;
+use Shetabit\Visitor\Contracts\UserAgentParser;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
+use Shetabit\Visitor\Exceptions\ResolverNotFoundException;
 use Shetabit\Visitor\Models\Visit;
 
 class Visitor implements UserAgentParser, GeoIpResolver
 {
     /**
-     * except.
+     * Paths that are not logged.
      *
-     * @var array
+     * @var array<int, string>
      */
-    protected $except;
-    /**
-     * Configuration.
-     *
-     * @var array
-     */
-    protected $config;
+    protected array $except;
 
     /**
-     * Driver name.
-     *
-     * @var string
+     * Name of the current user agent parser.
      */
-    protected $driver;
+    protected string $driver = '';
 
     /**
-     * Driver instance.
-     *
-     * @var object
+     * The user agent parser that is doing the work.
      */
-    protected $driverInstance;
-    
-	/**
-     * Resolver name.
-     *
-     * @var string
-     */
-    protected $resolver;
+    protected UserAgentParser|null $driverInstance = null;
 
     /**
-     * Resolver instance.
-     *
-     * @var object
+     * Name of the current GeoIP resolver.
      */
-    protected $resolverInstance;
+    protected string $resolver = '';
 
     /**
-     * Request instance.
-     *
-     * @var Request
+     * The GeoIP resolver that is doing the work.
      */
-    protected $request;
+    protected GeoIpResolver|null $resolverInstance = null;
 
     /**
      * Visitor (user) instance.
-     *
-     * @var Model|null
      */
-    protected $visitor;
+    protected Model|null $visitor = null;
 
     /**
      * Visitor constructor.
      *
-     * @param $config
+     * @param array<string, mixed> $config
      *
-     * @throws \Exception
+     * @throws Exception
      */
-    public function __construct(Request $request, $config)
+    public function __construct(protected Request $request, protected array $config)
     {
-        $this->request = $request;
-        $this->config = $config;
-        $this->except = $config['except'];
-        $this->via($this->config['default'], $this->config['resolver']);
+        $this->except = $config['except'] ?? [];
+        $this->via($this->config['default'] ?? '', $this->config['resolver'] ?? '');
         $this->setVisitor($request->user());
     }
 
     /**
      * Change the driver and the resolver on the fly.
      *
-     * @param $driver
-	 * @param $resolver
-     *
-     * @return $this
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    public function via($driver, $resolver)
+    public function via(string $driver, string $resolver): static
     {
         $this->driver = $driver;
         $this->validateDriver();
+        $this->driverInstance = null;
 
-		$this->resolver = $resolver;
-		$this->validateResolver();
+        $this->resolver = $resolver;
+        $this->validateResolver();
+        $this->resolverInstance = null;
 
         return $this;
     }
@@ -105,7 +83,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve request's data
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function request() : array
     {
@@ -114,18 +92,14 @@ class Visitor implements UserAgentParser, GeoIpResolver
 
     /**
      * Retrieve user's ip.
-     *
-     * @return string|null
      */
-    public  function ip() : ?string
+    public function ip() : string|null
     {
         return $this->request->ip();
     }
 
     /**
      * Retrieve request's url
-     *
-     * @return string
      */
     public function url() : string
     {
@@ -134,18 +108,14 @@ class Visitor implements UserAgentParser, GeoIpResolver
 
     /**
      * Retrieve request's referer
-     *
-     * @return string|null
      */
-    public function referer() : ?string
+    public function referer() : string|null
     {
-        return $_SERVER['HTTP_REFERER'] ?? null;
+        return $this->request->headers->get('referer');
     }
 
     /**
      * Retrieve request's method.
-     *
-     * @return string
      */
     public function method() : string
     {
@@ -155,7 +125,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve http headers.
      *
-     * @return array
+     * @return array<string, array<int, string|null>>
      */
     public function httpHeaders() : array
     {
@@ -164,8 +134,6 @@ class Visitor implements UserAgentParser, GeoIpResolver
 
     /**
      * Retrieve agent.
-     *
-     * @return string
      */
     public function userAgent() : string
     {
@@ -175,9 +143,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve device's name.
      *
-     * @return string
-     *
-     * @throws \Exception
+     * @throws Exception
      */
     public function device() : string
     {
@@ -187,9 +153,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve platform's name.
      *
-     * @return string
-     *
-     * @throws \Exception
+     * @throws Exception
      */
     public function platform() : string
     {
@@ -199,9 +163,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve browser's name.
      *
-     * @return string
-     *
-     * @throws \Exception
+     * @throws Exception
      */
     public function browser() : string
     {
@@ -211,44 +173,49 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Retrieve languages.
      *
-     * @return array
+     * @return array<int, string>
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function languages() : array
     {
         return $this->getDriverInstance()->languages();
     }
 
-	/**
-	* 
-	*/
-	public function resolve(string $ip): ?array
-	{
-		if(!($this->config['geoip'] ?? false)){
-			return null;
-		}
-		return $this->getResolverInstance()->resolve($ip);
-	}
+    /**
+     * Resolve the given IP into a location, when the enrichment is enabled.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @throws Exception
+     */
+    public function resolve(string $ip): array|null
+    {
+        if (!($this->config['geoip'] ?? false)) {
+            return null;
+        }
 
+        return $this->getResolverInstance()->resolve($ip);
+    }
 
-	/**
-	*
-	*/
-	public function geolocation(): ?array
-	{
-		$ip = $this->ip();
-		return $ip ? $this->resolve($ip) : null;
-	}
+    /**
+     * Resolve the location of the current visitor.
+     *
+     * @return array<string, mixed>|null
+     *
+     * @throws Exception
+     */
+    public function geolocation(): array|null
+    {
+        $ip = $this->ip();
+
+        return $ip === null ? null : $this->resolve($ip);
+    }
 
     /**
      * Set visitor (user)
-     *
-     * @param Model|null $user
-     *
-     * @return $this
      */
-    public function setVisitor(?Model $user)
+    public function setVisitor(Model|null $user): static
     {
         $this->visitor = $user;
 
@@ -257,10 +224,8 @@ class Visitor implements UserAgentParser, GeoIpResolver
 
     /**
      * Retrieve visitor (user)
-     *
-     * @return Model|null
      */
-    public function getVisitor() : ?Model
+    public function getVisitor() : Model|null
     {
         return $this->visitor;
     }
@@ -268,72 +233,71 @@ class Visitor implements UserAgentParser, GeoIpResolver
     /**
      * Create a visit log.
      *
-     * @param Model $model|null
+     * Answers with `null` for a request the `except` configuration excludes.
+     *
+     * @throws Exception
      */
-    public function visit(?Model $model = null)
+    public function visit(Model|null $model = null): Visit|null
     {
         foreach ($this->except as $path) {
             if ($this->request->is($path)) {
-                return;
+                return null;
             }
         }
 
-
         $data = $this->prepareLog();
 
-        if (null !== $model && method_exists($model, 'visitLogs')) {
-            $visit = $model->visitLogs()->create($data);
-        } else {
-            $visit = Visit::create($data);
-        }
+        $visit = $model !== null && method_exists($model, 'visitLogs')
+            ? $model->visitLogs()->create($data)
+            : Visit::create($data);
 
-        return $visit;
+        return $visit instanceof Visit ? $visit : null;
     }
 
     /**
      * Retrieve online visitors.
      *
-     * @param string $model
-     * @param int $seconds
+     * @param class-string<Model> $model a model that uses the `Visitor` trait
+     *
+     * @return Collection<int, Model>
      */
-    public function onlineVisitors(string $model, $seconds = 180)
+    public function onlineVisitors(string $model, int $seconds = 180): Collection
     {
-        return app($model)->online()->get();
+        /** @var Builder<Model> $query */
+        $query = app($model)->online($seconds);
+
+        return $query->get();
     }
 
     /**
      * Determine if given visitor or current one is online.
-     *
-     * @param Model|null $visitor
-     * @param int $seconds
-     *
-     * @return bool
      */
-    public function isOnline(?Model $visitor = null, $seconds = 180)
+    public function isOnline(Model|null $visitor = null, int $seconds = 180): bool
     {
-        $time = now()->subSeconds($seconds);
+        $visitor ??= $this->getVisitor();
 
-        $visitor = $visitor ?? $this->getVisitor();
-
-        if (empty($visitor)) {
+        if ($visitor === null) {
             return false;
         }
 
-        return Visit::whereHasMorph('visitor', get_class($visitor), function ($query) use ($visitor, $time) {
-            $query->where('visitor_id', $visitor->id);
-        })->whereDate('created_at', '>=', $time)->count() > 0;
+        return Visit::query()
+            ->whereHasMorph('visitor', $visitor::class, function (Builder $query) use ($visitor): void {
+                $query->whereKey($visitor->getKey());
+            })
+            ->where('created_at', '>=', now()->subSeconds($seconds))
+            ->exists();
     }
 
     /**
      * Prepare log's data.
      *
-     * @return array
+     * @return array<string, mixed>
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function prepareLog() : array
     {
-        $log =  [
+        $log = [
             'method' => $this->method(),
             'request' => $this->request(),
             'url' => $this->url(),
@@ -345,126 +309,122 @@ class Visitor implements UserAgentParser, GeoIpResolver
             'platform' => $this->platform(),
             'browser' => $this->browser(),
             'ip' => $this->ip(),
-            'visitor_id' => $this->getVisitor()?->id,
-            'visitor_type' => $this->getVisitor()?->getMorphClass()
+            'visitor_id' => $this->getVisitor()?->getKey(),
+            'visitor_type' => $this->getVisitor()?->getMorphClass(),
         ];
-		
-		if(!empty($this->config['geoip'])) {
-			$log['geo_raw'] = $this->geolocation();
-		}
-		
-		return $log;
+
+        if (!empty($this->config['geoip'])) {
+            $log['geo_raw'] = $this->geolocation();
+        }
+
+        return $log;
     }
 
     /**
      * Retrieve current driver instance or generate new one.
      *
-     * @return mixed|object
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getDriverInstance()
+    protected function getDriverInstance() : UserAgentParser
     {
-        if (!empty($this->driverInstance)) {
-            return $this->driverInstance;
-        }
-
-        return $this->getFreshDriverInstance();
+        return $this->driverInstance ??= $this->getFreshDriverInstance();
     }
 
     /**
      * Get new driver instance
      *
-     * @return Driver
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getFreshDriverInstance()
+    protected function getFreshDriverInstance() : UserAgentParser
     {
         $this->validateDriver();
 
-        $driverClass = $this->config['drivers'][$this->driver];
-
-        return app($driverClass);
+        return app($this->driverClass());
     }
 
     /**
      * Validate driver.
      *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function validateDriver()
+    protected function validateDriver() : void
     {
-        if (empty($this->driver)) {
+        if ($this->driver === '') {
             throw new DriverNotFoundException('Driver not selected or default driver does not exist.');
         }
 
-        $driverClass = $this->config['drivers'][$this->driver];
+        $driverClass = $this->driverClass();
 
-        if (empty($driverClass) || !class_exists($driverClass)) {
+        if ($driverClass === null || !class_exists($driverClass)) {
             throw new DriverNotFoundException('Driver not found in config file. Try updating the package.');
         }
 
-        $reflect = new \ReflectionClass($driverClass);
-
-        if (!$reflect->implementsInterface(UserAgentParser::class)) {
-            throw new \Exception("Driver must be an instance of Contracts\Driver.");
+        if (!new ReflectionClass($driverClass)->implementsInterface(UserAgentParser::class)) {
+            throw new Exception("Driver must be an instance of Contracts\UserAgentParser.");
         }
     }
 
     /**
      * Retrieve current resolver instance or generate new one.
      *
-     * @return mixed|object
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getResolverInstance()
+    protected function getResolverInstance() : GeoIpResolver
     {
-        if (!empty($this->resolverInstance)) {
-            return $this->resolverInstance;
-        }
-
-        return $this->getFreshResolverInstance();
+        return $this->resolverInstance ??= $this->getFreshResolverInstance();
     }
 
     /**
      * Get new resolver instance
      *
-     * @return Resolver
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function getFreshResolverInstance()
+    protected function getFreshResolverInstance() : GeoIpResolver
     {
         $this->validateResolver();
 
-        $resolverClass = $this->config['resolvers'][$this->resolver];
-
-        return app($resolverClass);
+        return app($this->resolverClass());
     }
 
     /**
      * Validate resolver.
      *
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function validateResolver()
+    protected function validateResolver() : void
     {
-        if (empty($this->resolver)) {
+        if ($this->resolver === '') {
             throw new ResolverNotFoundException('Resolver not selected or default resolver does not exist.');
         }
 
-        $resolverClass = $this->config['resolvers'][$this->resolver];
+        $resolverClass = $this->resolverClass();
 
-        if (empty($resolverClass) || !class_exists($resolverClass)) {
+        if ($resolverClass === null || !class_exists($resolverClass)) {
             throw new ResolverNotFoundException('Resolver not found in config file. Try updating the package.');
         }
 
-        $reflect = new \ReflectionClass($resolverClass);
-
-        if (!$reflect->implementsInterface(GeoIpResolver::class)) {
-            throw new \Exception("Resolver must be an instance of Contracts\Resolver.");
+        if (!new ReflectionClass($resolverClass)->implementsInterface(GeoIpResolver::class)) {
+            throw new Exception("Resolver must be an instance of Contracts\GeoIpResolver.");
         }
+    }
+
+    /**
+     * The class of the driver that is selected.
+     *
+     * @return class-string|null
+     */
+    private function driverClass() : string|null
+    {
+        return $this->config['drivers'][$this->driver] ?? null;
+    }
+
+    /**
+     * The class of the resolver that is selected.
+     *
+     * @return class-string|null
+     */
+    private function resolverClass() : string|null
+    {
+        return $this->config['resolvers'][$this->resolver] ?? null;
     }
 }

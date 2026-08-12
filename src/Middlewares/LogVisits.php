@@ -4,38 +4,36 @@ namespace Shetabit\Visitor\Middlewares;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class LogVisits
 {
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     *
-     * @return mixed
+     * @param Closure(Request): Response $next
      */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $logHasSaved = false;
+        $this->log($request);
 
-        // create log for first binded model
-        foreach ($request->route()->parameters() as $parameter) {
+        return $next($request);
+    }
+
+    /**
+     * Log the visit of the first model the router bound, or of the page.
+     */
+    private function log(Request $request): void
+    {
+        foreach ($request->route()?->parameters() ?? [] as $parameter) {
             if ($parameter instanceof Model) {
                 visitor()->visit($parameter);
 
-                $logHasSaved = true;
-
-                break;
+                return;
             }
         }
 
-        // create log for normal visits
-        if (!$logHasSaved) {
-            visitor()->visit();
-        }
-
-        return $next($request);
+        visitor()->visit();
     }
 }

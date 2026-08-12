@@ -7,11 +7,10 @@ use Closure;
 use Detection\Exception\MobileDetectException;
 use Detection\MobileDetect;
 use Jaybizzle\CrawlerDetect\CrawlerDetect;
-use Random\RandomException;
+use Shetabit\Visitor\Support\AcceptLanguage;
 
 class Agent extends MobileDetect
 {
-
     /**
      * List of desktop devices.
      *
@@ -20,6 +19,7 @@ class Agent extends MobileDetect
     protected static array $desktopDevices = [
         'Macintosh' => 'Macintosh',
     ];
+
     /**
      * List of additional operating systems.
      *
@@ -36,6 +36,7 @@ class Agent extends MobileDetect
         'Linux' => 'Linux',
         'ChromeOS' => 'CrOS',
     ];
+
     /**
      * List of additional browsers.
      *
@@ -57,7 +58,10 @@ class Agent extends MobileDetect
         'WeChat' => 'MicroMessenger',
     ];
 
-    protected static CrawlerDetect $crawlerDetect;
+    /**
+     * The crawler detector, shared by every agent.
+     */
+    protected static CrawlerDetect|null $crawlerDetect = null;
 
     /**
      * Key value store for resolved strings.
@@ -66,191 +70,82 @@ class Agent extends MobileDetect
      */
     protected array $store = [];
 
-    public function getRules(): array
+    /**
+     * The rules this class adds to the ones of the parent.
+     *
+     * They are deliberately kept out of `getRules()`: the parent answers
+     * `isMobile()` by matching the user agent against every rule that method
+     * hands out, so adding the desktop devices and the desktop browsers to it
+     * made every desktop a mobile device — and with that every desktop a phone.
+     *
+     * @return array<string, array<int, string>|string>
+     */
+    public function getAdditionalRules(): array
     {
-        static $rules;
-
-        if (!$rules) {
-            $rules = array_merge(
-                static::$browsers,
-                static::$operatingSystems,
-                static::$phoneDevices,
-                static::$tabletDevices,
-                static::$desktopDevices, // NEW
-                static::$additionalOperatingSystems, // NEW
-                static::$additionalBrowsers // NEW
-            );
-        }
-
-        return $rules;
+        return $this->mergeRules(
+            static::$desktopDevices,
+            static::$additionalOperatingSystems,
+            static::$additionalBrowsers
+        );
     }
 
     /**
      * Get accept languages.
-     * @param string|null $acceptLanguage
-     * @return array
+     *
+     * @return array<int, string> the languages, the most preferred one first
      */
-    public function languages(string $acceptLanguage = null): array
+    public function languages(string|null $acceptLanguage = null): array
     {
-        if ($acceptLanguage === null) {
-            $acceptLanguage = $this->getHttpHeader('HTTP_ACCEPT_LANGUAGE');
-        }
-
-        if (!$acceptLanguage) {
-            return [];
-        }
-
-        $languages = [];
-
-        // Parse accept language string.
-        foreach (explode(',', $acceptLanguage) as $piece) {
-            $parts = explode(';', $piece);
-            $language = strtolower($parts[0]);
-            $priority = empty($parts[1]) ? 1. : (float)str_replace('q=', '', $parts[1]);
-
-            $languages[$language] = $priority;
-        }
-
-        // Sort languages by priority.
-        arsort($languages);
-
-        return array_keys($languages);
+        return AcceptLanguage::parse($acceptLanguage ?? $this->getHttpHeader('HTTP_ACCEPT_LANGUAGE'));
     }
 
     /**
      * Get the browser name.
-     * @return string|bool
      */
     public function browser(): bool|string
     {
-        return $this->retrieveUsingCacheOrResolve('visitor.browser', function () {
-            return $this->findDetectionRulesAgainstUserAgent(
+        return $this->retrieveUsingCacheOrResolve(
+            'visitor.browser',
+            fn (): bool|string => $this->findDetectionRulesAgainstUserAgent(
                 $this->mergeRules(static::$additionalBrowsers, MobileDetect::getBrowsers())
-            );
-        });
-    }
-
-    /**
-     * Retrieve from the given key from the cache or resolve the value.
-     *
-     * @param string $key
-     * @param \Closure():mixed $callback
-     * @return mixed
-     */
-    protected function retrieveUsingCacheOrResolve(string $key, Closure $callback): mixed
-    {
-        $cacheKey = $this->createCacheKey($key);
-
-        if (!is_null($cacheItem = $this->store[$cacheKey] ?? null)) {
-            return $cacheItem;
-        }
-
-        return tap($callback(), function ($result) use ($cacheKey) {
-            $this->store[$cacheKey] = $result;
-        });
-    }
-
-    /**
-     * @throws RandomException
-     */
-    protected function createCacheKey(string $key): string
-    {
-        $userAgentKey = $this->hasUserAgent() ? $this->userAgent : '';
-        $randomBytes = random_bytes(16);
-        $randomHash = bin2hex($randomBytes);
-
-        return base64_encode("$key:$userAgentKey:$randomHash");
-    }
-
-    /**
-     * Match a detection rule and return the matched key.
-     *
-     * @param array $rules
-     * @return string|null
-     */
-    protected function findDetectionRulesAgainstUserAgent(array $rules): ?string
-    {
-        $userAgent = $this->getUserAgent();
-
-        foreach ($rules as $key => $regex) {
-            if (empty($regex)) {
-                continue;
-            }
-
-            // regex is an array of "strings"
-            if (is_array($regex)) {
-                foreach ($regex as $regexString) {
-                    if ($this->match($regexString, $userAgent)) {
-                        return $key ?: reset($this->matchesArray);
-                    }
-                }
-            } else if ($this->match($regex, $userAgent)) {
-                return $key ?: reset($this->matchesArray);
-            }
-
-        }
-
-        return false;
-    }
-
-    /**
-     * Merge multiple rules into one array.
-     *
-     * @param array $all
-     * @return array<string, string>
-     */
-    protected function mergeRules(...$all): array
-    {
-        $merged = [];
-
-        foreach ($all as $rules) {
-            foreach ($rules as $key => $value) {
-                if (empty($merged[$key])) {
-                    $merged[$key] = $value;
-                } elseif (is_array($merged[$key])) {
-                    $merged[$key][] = $value;
-                } else {
-                    $merged[$key] .= '|' . $value;
-                }
-            }
-        }
-
-        return $merged;
+            ) ?? false
+        );
     }
 
     /**
      * Get the platform name.
-     *
-     * @return string|bool
      */
     public function platform(): bool|string
     {
-        return $this->retrieveUsingCacheOrResolve('visitor.platform', function () {
-            return $this->findDetectionRulesAgainstUserAgent(
+        return $this->retrieveUsingCacheOrResolve(
+            'visitor.platform',
+            fn (): bool|string => $this->findDetectionRulesAgainstUserAgent(
                 $this->mergeRules(static::$additionalOperatingSystems, MobileDetect::getOperatingSystems())
-            );
-        });
+            ) ?? false
+        );
     }
 
     /**
      * Get the device name.
-     * @return string|bool
      */
     public function device(): bool|string
     {
-        return $this->findDetectionRulesAgainstUserAgent(
-            $this->mergeRules(
-                static::getDesktopDevices(),
-                static::getPhoneDevices(),
-                static::getTabletDevices()
-            )
+        return $this->retrieveUsingCacheOrResolve(
+            'visitor.device',
+            fn (): bool|string => $this->findDetectionRulesAgainstUserAgent(
+                $this->mergeRules(
+                    static::getDesktopDevices(),
+                    static::getPhoneDevices(),
+                    static::getTabletDevices()
+                )
+            ) ?? false
         );
     }
 
     /**
      * Retrieve the list of known Desktop devices.
      *
-     * @return array List of Desktop devices.
+     * @return array<string, string> List of Desktop devices.
      */
     public static function getDesktopDevices(): array
     {
@@ -259,34 +154,27 @@ class Agent extends MobileDetect
 
     /**
      * Get the robot name.
-     * @return string|bool
      */
     public function robot(): bool|string
     {
-        $userAgent = $this->getUserAgent();
-
-        if ($this->getCrawlerDetect()->isCrawler($userAgent ?: $this->userAgent)) {
-            return ucfirst($this->getCrawlerDetect()->getMatches());
+        if ($this->isRobot()) {
+            return ucfirst((string) $this->getCrawlerDetect()->getMatches());
         }
 
         return false;
     }
 
     /**
-     * @return CrawlerDetect
+     * The crawler detector, created once and then shared.
      */
     public function getCrawlerDetect(): CrawlerDetect
     {
-        if (static::$crawlerDetect === null) {
-            static::$crawlerDetect = new CrawlerDetect();
-        }
-
-        return static::$crawlerDetect;
+        return static::$crawlerDetect ??= new CrawlerDetect();
     }
 
     /**
      * Get the device type
-     * @return string
+     *
      * @throws MobileDetectException
      */
     public function deviceType(): string
@@ -312,39 +200,36 @@ class Agent extends MobileDetect
 
     /**
      * Check if the device is a desktop computer.
-     * @return bool
+     *
      * @throws MobileDetectException
      */
     public function isDesktop(): bool
     {
         $userAgent = $this->getUserAgent();
 
-        return $this->retrieveUsingCacheOrResolve('visitor.desktop', function () use ($userAgent) {
-
+        return $this->retrieveUsingCacheOrResolve('visitor.desktop', function () use ($userAgent): bool {
             // Check specifically for cloudfront headers if the useragent === 'Amazon CloudFront'
-            if ($userAgent === static::$cloudFrontUA && $this->getHttpHeader('HTTP_CLOUDFRONT_IS_DESKTOP_VIEWER') === 'true') {
+            if ($userAgent === static::$cloudFrontUA
+                && $this->getHttpHeader('HTTP_CLOUDFRONT_IS_DESKTOP_VIEWER') === 'true'
+            ) {
                 return true;
             }
 
-            return !$this->isMobile() && !$this->isTablet() && !$this->isRobot($userAgent);
+            return !$this->isMobile() && !$this->isTablet() && !$this->isRobot();
         });
-
     }
 
     /**
      * Check if device is a robot.
-     * @return bool
      */
     public function isRobot(): bool
     {
-        $userAgent = $this->getUserAgent();
-
-        return $this->getCrawlerDetect()->isCrawler($userAgent ?: $this->userAgent);
+        return $this->getCrawlerDetect()->isCrawler($this->getUserAgent() ?: $this->userAgent);
     }
 
     /**
      * Check if the device is a mobile phone.
-     * @return bool
+     *
      * @throws MobileDetectException
      */
     public function isPhone(): bool
@@ -354,6 +239,8 @@ class Agent extends MobileDetect
 
     /**
      * @inheritdoc
+     *
+     * @param array<int, mixed> $arguments
      */
     public function __call(string $name, array $arguments): bool
     {
@@ -362,8 +249,119 @@ class Agent extends MobileDetect
             throw new BadMethodCallException("No such method exists: $name");
         }
 
-        $key = substr($name, 2);
+        $rule = substr($name, 2);
 
-        return $this->matchUserAgentWithRule($key);
+        return $this->matchUserAgentWithRule($rule) || $this->matchUserAgentWithAdditionalRule($rule);
+    }
+
+    /**
+     * Match the user agent against a rule this class adds, `isMacintosh()` for
+     * instance, which the parent does not know about.
+     */
+    protected function matchUserAgentWithAdditionalRule(string $ruleName): bool
+    {
+        $rules = array_change_key_case($this->getAdditionalRules());
+        $regex = $rules[strtolower($ruleName)] ?? null;
+
+        if (empty($regex)) {
+            return false;
+        }
+
+        return $this->match(is_array($regex) ? implode('|', $regex) : $regex, (string) $this->getUserAgent());
+    }
+
+    /**
+     * Retrieve from the given key from the cache or resolve the value.
+     *
+     * @param \Closure():mixed $callback
+     */
+    protected function retrieveUsingCacheOrResolve(string $key, Closure $callback): mixed
+    {
+        $storeKey = $this->storeKey($key);
+
+        if (array_key_exists($storeKey, $this->store)) {
+            return $this->store[$storeKey];
+        }
+
+        return $this->store[$storeKey] = $callback();
+    }
+
+    /**
+     * The key the resolved value of the given key is kept under.
+     *
+     * The user agent is part of it, so that an agent that is handed a second
+     * user agent does not answer with what it resolved for the first one.
+     *
+     * This is deliberately not called `createCacheKey()`: that method belongs
+     * to the parent, which builds the keys of its own cache with it. Taking it
+     * over made every call that reaches the cache of the parent — `isMobile()`,
+     * `isTablet()` and with them `isDesktop()`, `isPhone()` and `deviceType()`
+     * — fail with a "cache key is invalid".
+     */
+    protected function storeKey(string $key): string
+    {
+        $userAgentKey = $this->hasUserAgent() ? $this->userAgent : '';
+
+        return base64_encode("$key:$userAgentKey");
+    }
+
+    /**
+     * Match a detection rule and return the matched key.
+     *
+     * @param array<string, array<int, string>|string> $rules
+     */
+    protected function findDetectionRulesAgainstUserAgent(array $rules): string|null
+    {
+        $userAgent = (string) $this->getUserAgent();
+
+        foreach ($rules as $key => $regex) {
+            if (empty($regex)) {
+                continue;
+            }
+
+            // regex is an array of "strings"
+            if (is_array($regex)) {
+                foreach ($regex as $regexString) {
+                    if ($this->match($regexString, $userAgent)) {
+                        return $key ?: (string) reset($this->matchesArray);
+                    }
+                }
+
+                continue;
+            }
+
+            if ($this->match($regex, $userAgent)) {
+                return $key ?: (string) reset($this->matchesArray);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Merge multiple rules into one array.
+     *
+     * @param array<string, array<int, string>|string> ...$all
+     * @return array<string, array<int, string>|string>
+     */
+    protected function mergeRules(array ...$all): array
+    {
+        $merged = [];
+
+        foreach ($all as $rules) {
+            foreach ($rules as $key => $value) {
+                if (empty($merged[$key])) {
+                    $merged[$key] = $value;
+
+                    continue;
+                }
+
+                $merged[$key] = is_array($merged[$key]) || is_array($value)
+                    ? [...(array) $merged[$key], ...(array) $value]
+                    : $merged[$key].'|'.$value;
+            }
+        }
+
+        return $merged;
     }
 }

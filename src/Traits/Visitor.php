@@ -2,60 +2,56 @@
 
 namespace Shetabit\Visitor\Traits;
 
-use Illuminate\Support\Facades\Auth;
-use Shetabit\Visitor\Models\Visit;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Shetabit\Visitor\Models\Visit;
 
+/**
+ * Turns a model into someone who visits, a user for instance.
+ *
+ * @phpstan-require-extends Model
+ */
 trait Visitor
 {
     /**
-     * Get all of the post's comments.
-     * @return mixed
+     * The visits of this visitor.
+     *
+     * @return MorphMany<Visit, $this>
      */
-    public function visits()
+    public function visits(): MorphMany
     {
         return $this->morphMany(Visit::class, 'visitor');
     }
 
     /**
      * Create a visit log.
-     * @param Model|null $visitable
-     * @return mixed
      */
-    public function visit(?Model $visitable = NULL)
+    public function visit(Model|null $visitable = null): Visit|null
     {
-        return app('shetabit-visitor')->setVisitor($this)->visit($visitable);
+        return visitor()->setVisitor($this)->visit($visitable);
     }
 
     /**
      * Retrieve online users
-     * @param $query
-     * @param int $seconds
-     * @return mixed
+     *
+     * @param Builder<static> $query
+     * @return Builder<static>
      */
-    public function scopeOnline($query, $seconds = 180)
+    public function scopeOnline(Builder $query, int $seconds = 180): Builder
     {
-        $time = now()->subSeconds($seconds);
-
-        $query->whereHas('visits', function ($query) use ($time) {
-            $query->where(config('visitor.table_name') . ".created_at", '>=', $time->toDateTime());
-
+        return $query->whereHas('visits', function (Builder $query) use ($seconds): void {
+            $query->where($query->qualifyColumn('created_at'), '>=', now()->subSeconds($seconds));
         });
     }
 
     /**
      * check if user is online
-     * @param int $seconds
-     * @return bool
      */
-    public function isOnline($seconds = 180)
+    public function isOnline(int $seconds = 180): bool
     {
-        $time = now()->subSeconds($seconds);
-
-        return $this->visits()->whereHasMorph('visitor', [static::class], function ($query) use ($time) {
-                $query
-                    ->where('visitor_id', $this->id)
-                    ->where(config('visitor.table_name') . ".created_at", '>=', $time->toDateTime());
-            })->count() > 0;
+        return $this->visits()
+            ->where('created_at', '>=', now()->subSeconds($seconds))
+            ->exists();
     }
 }
