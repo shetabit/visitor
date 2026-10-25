@@ -14,12 +14,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Schema::hasColumn($this->table(), 'route')) {
+        if (Schema::hasColumn($this->table(), 'route_name')) {
             return;
         }
 
         Schema::table($this->table(), function (Blueprint $table): void {
-            $table->string('route')
+            $table->string('route_name')
                 ->nullable()
                 ->after('url')
                 ->index()
@@ -32,13 +32,13 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (!Schema::hasColumn($this->table(), 'route')) {
+        if (!Schema::hasColumn($this->table(), 'route_name')) {
             return;
         }
 
         Schema::table($this->table(), function (Blueprint $table): void {
-            $table->dropIndex(['route']);
-            $table->dropColumn('route');
+            $table->dropIndex(['route_name']);
+            $table->dropColumn('route_name');
         });
     }
 

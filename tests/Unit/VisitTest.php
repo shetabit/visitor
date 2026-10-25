@@ -24,7 +24,7 @@ final class VisitTest extends TestCase
     {
         $visit = Visit::query()->create([
             'method' => 'GET',
-            'route' => 'products.index',
+            'route_name' => 'products.index',
             'request' => ['page' => '2'],
             'languages' => ['en-us', 'en'],
             'headers' => ['user-agent' => ['Firefox']],
@@ -33,7 +33,7 @@ final class VisitTest extends TestCase
 
         $stored = Visit::query()->whereKey($visit->getKey())->sole();
 
-        $this->assertSame('products.index', $stored->route);
+        $this->assertSame('products.index', $stored->route_name);
         $this->assertSame(['page' => '2'], $stored->request);
         $this->assertSame(['en-us', 'en'], $stored->languages);
         $this->assertSame(['user-agent' => ['Firefox']], $stored->headers);

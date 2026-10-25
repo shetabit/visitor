@@ -26,7 +26,7 @@ final class LogVisitsMiddlewareTest extends TestCase
 
         $this->assertSame('GET', $visit->method);
         $this->assertSame('http://localhost/products?page=2', $visit->url);
-        $this->assertSame('products.index', $visit->route);
+        $this->assertSame('products.index', $visit->route_name);
         $this->assertSame(['page' => '2'], $visit->request);
         $this->assertSame('https://example.com/from', $visit->referer);
         $this->assertSame(self::FIREFOX_USER_AGENT, $visit->useragent);
@@ -60,14 +60,14 @@ final class LogVisitsMiddlewareTest extends TestCase
 
         $this->assertTrue($post->is($visit->visitable));
         $this->assertSame(1, $post->visitLogs()->count());
-        $this->assertSame('posts.show', $visit->route);
+        $this->assertSame('posts.show', $visit->route_name);
     }
 
     public function testItLogsNoRouteNameForARouteWithoutOne() : void
     {
         $this->get('/about')->assertOk();
 
-        $this->assertNull(Visit::query()->sole()->route);
+        $this->assertNull(Visit::query()->sole()->route_name);
     }
 
     public function testTheVisitsOfARouteCanBeFilteredByItsName() : void
@@ -82,8 +82,8 @@ final class LogVisitsMiddlewareTest extends TestCase
             $this->app->forgetScopedInstances();
         }
 
-        $this->assertSame(2, Visit::query()->where('route', 'posts.show')->count());
-        $this->assertSame(1, Visit::query()->where('route', 'products.index')->count());
+        $this->assertSame(2, Visit::query()->where('route_name', 'posts.show')->count());
+        $this->assertSame(1, Visit::query()->where('route_name', 'products.index')->count());
     }
 
     public function testItLogsOneVisitPerRequest() : void

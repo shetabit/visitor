@@ -94,24 +94,25 @@ final class VisitorServiceProviderTest extends TestCase
         $this->assertCount(3, $migrations);
         $this->assertStringContainsString('create_visits_table', $migrations[0]);
         $this->assertStringContainsString('add_geo_raw_to_visits_table', $migrations[1]);
-        $this->assertStringContainsString('add_route_to_visits_table', $migrations[2]);
+        $this->assertStringContainsString('add_route_name_to_visits_table', $migrations[2]);
     }
 
-    public function testTheRouteColumnIsAddedOnceAndCanBeRolledBack() : void
+    public function testTheRouteNameColumnIsAddedOnceAndCanBeRolledBack() : void
     {
-        $migration = require dirname(__DIR__, 2).'/database/migrations/2026_10_25_000000_add_route_to_visits_table.php';
+        $migrations = dirname(__DIR__, 2).'/database/migrations';
+        $migration = require $migrations.'/2026_10_25_000000_add_route_name_to_visits_table.php';
         $table = (string) config('visitor.table_name');
 
-        $this->assertTrue(Schema::hasColumn($table, 'route'));
+        $this->assertTrue(Schema::hasColumn($table, 'route_name'));
 
         // A table that already has the column is left alone
         $migration->up();
-        $this->assertTrue(Schema::hasColumn($table, 'route'));
+        $this->assertTrue(Schema::hasColumn($table, 'route_name'));
 
         $migration->down();
-        $this->assertFalse(Schema::hasColumn($table, 'route'));
+        $this->assertFalse(Schema::hasColumn($table, 'route_name'));
 
         $migration->up();
-        $this->assertTrue(Schema::hasColumn($table, 'route'));
+        $this->assertTrue(Schema::hasColumn($table, 'route_name'));
     }
 }

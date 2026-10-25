@@ -51,17 +51,27 @@ final class VisitorTest extends TestCase
         $this->assertArrayHasKey('user-agent', $visitor->httpHeaders());
     }
 
-    public function testItReadsTheNameOfTheRouteTheRequestMatched() : void
+    public function testItReadsTheRouteTheRequestMatchedAndItsName() : void
     {
         $route = new Route('GET', '/products', fn (): string => 'products')->name('products.index');
         $this->swapRequest()->setRouteResolver(fn (): Route => $route);
 
-        $this->assertSame('products.index', $this->visitor()->route());
+        $this->assertSame($route, $this->visitor()->route());
+        $this->assertSame('products.index', $this->visitor()->routeName());
     }
 
-    public function testItReadsNoRouteNameOfARequestThatMatchedNoRoute() : void
+    public function testItReadsNoRouteOfARequestThatMatchedNoRoute() : void
     {
         $this->assertNull($this->visitor()->route());
+        $this->assertNull($this->visitor()->routeName());
+    }
+
+    public function testItReadsNoRouteOfARouteResolverThatHandsNoRouteOver() : void
+    {
+        $this->swapRequest()->setRouteResolver(fn (): string => 'not a route');
+
+        $this->assertNull($this->visitor()->route());
+        $this->assertNull($this->visitor()->routeName());
     }
 
     public function testItReadsNoRouteNameOfARouteWithoutOne() : void
@@ -69,7 +79,8 @@ final class VisitorTest extends TestCase
         $route = new Route('GET', '/products', fn (): string => 'products');
         $this->swapRequest()->setRouteResolver(fn (): Route => $route);
 
-        $this->assertNull($this->visitor()->route());
+        $this->assertSame($route, $this->visitor()->route());
+        $this->assertNull($this->visitor()->routeName());
     }
 
     public function testItReadsTheRefererOfTheRequestAndNotOfTheSuperGlobals() : void
@@ -216,7 +227,7 @@ final class VisitorTest extends TestCase
         $this->assertInstanceOf(Visit::class, $visit);
         $this->assertSame('GET', $visit->method);
         $this->assertSame('http://localhost/products', $visit->url);
-        $this->assertNull($visit->route);
+        $this->assertNull($visit->route_name);
         $this->assertSame('a-device', $visit->device);
         $this->assertSame('a-platform', $visit->platform);
         $this->assertSame('a-browser', $visit->browser);
