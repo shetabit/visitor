@@ -5,6 +5,7 @@ namespace Shetabit\Visitor\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Shetabit\Visitor\Models\Visit;
+use Shetabit\Visitor\Support\VisitModel;
 
 /**
  * Turns a model into something that can be visited, a post for instance.
@@ -20,7 +21,7 @@ trait Visitable
      */
     public function visitLogs(): MorphMany
     {
-        return $this->morphMany(Visit::class, 'visitable');
+        return $this->morphMany(VisitModel::name(), 'visitable');
     }
 
     /**
@@ -28,9 +29,11 @@ trait Visitable
      *
      * The visitor is optional: without one, the log only says that this model
      * was visited.
+     *
+     * @param array<string, mixed> $attributes columns of the visit model to fill beside the ones the package fills
      */
-    public function createVisitLog(Model|null $visitor = null): Visit|null
+    public function createVisitLog(Model|null $visitor = null, array $attributes = []): Visit|null
     {
-        return visitor()->setVisitor($visitor)->visit($this);
+        return visitor()->setVisitor($visitor)->visit($this, $attributes);
     }
 }

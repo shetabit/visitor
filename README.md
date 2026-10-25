@@ -153,6 +153,44 @@ composer require stevebauman/location
 The bundled resolver hands the country, the region, the city and the coordinates of a visit over. You can write your
 own by implementing `Shetabit\Visitor\Contracts\GeoIpResolver` and adding it to the `resolvers` array of the config.
 
+#### Custom visit model
+
+A visit can keep columns of your own, a name or a mobile number for instance. Add them to the visits table with a
+migration of your application, then extend the package's model with one that has them in its `$fillable`
+
+```php
+namespace App\Models;
+
+use Shetabit\Visitor\Models\Visit as BaseVisit;
+
+class Visit extends BaseVisit
+{
+    public function __construct(array $attributes = [])
+    {
+        $this->mergeFillable(['name', 'mobile']);
+
+        parent::__construct($attributes);
+    }
+}
+```
+
+name it in `config/visitor.php`
+
+```php
+'model' => \App\Models\Visit::class,
+```
+
+and hand the values of the columns over when a visit is logged, they are kept beside the ones the package fills
+
+```php
+visitor()->visit($post, ['name' => $request->input('name'), 'mobile' => $request->input('mobile')]);
+$post->createVisitLog($user, ['mobile' => $request->input('mobile')]);
+$user->visit($post, ['mobile' => $request->input('mobile')]);
+```
+
+The visitor, the `visitLogs` and `visits` relations and the online checks all use the model of the configuration. It
+has to extend `Shetabit\Visitor\Models\Visit`.
+
 ## Testing
 
 Every pull request and every push to `master` is checked by [GitHub Actions][link-actions]: the test suite runs on

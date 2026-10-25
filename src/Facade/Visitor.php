@@ -27,7 +27,7 @@ use Shetabit\Visitor\Visitor as VisitorManager;
  * @method static array<string, mixed>|null geolocation()
  * @method static VisitorManager setVisitor(Model|null $user)
  * @method static Model|null getVisitor()
- * @method static Visit|null visit(Model|null $model = null)
+ * @method static Visit|null visit(Model|null $model = null, array<string, mixed> $attributes = [])
  * @method static Collection<int, Model> onlineVisitors(string $model, int $seconds = 180)
  * @method static bool isOnline(Model|null $visitor = null, int $seconds = 180)
  *

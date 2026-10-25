@@ -22,6 +22,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   `Shetabit\Visitor\Facade\Visitor::SERVICE_NAME`.
 - The `visitor-config` and `visitor-migrations` publish tags, next to the `config` and `migrations` ones the package
   has always used.
+- The model the visits are logged with can be configured (`model`, `Shetabit\Visitor\Models\Visit` by default), so
+  an application can extend it with columns of its own. `visit()`, `createVisitLog()` and the `visit()` of the
+  `Visitor` trait take the values of those columns as a new, optional `$attributes` argument. The visitor, the
+  `visitLogs` and `visits` relations and the online checks all use the configured model, which has to extend the
+  package's one. A configuration published before has no `model`, and keeps using the package's model.
 
 ### Changed
 - **Breaking:** PHP 8.4 is now the minimum required version (was PHP 8.0), and only the last two major versions of
