@@ -29,6 +29,7 @@ final class VisitTest extends TestCase
             'languages' => ['en-us', 'en'],
             'headers' => ['user-agent' => ['Firefox']],
             'geo_raw' => ['country_code' => 'IR'],
+            'extra_attributes' => ['mobile' => '09120000000'],
         ]);
 
         $stored = Visit::query()->whereKey($visit->getKey())->sole();
@@ -38,6 +39,7 @@ final class VisitTest extends TestCase
         $this->assertSame(['en-us', 'en'], $stored->languages);
         $this->assertSame(['user-agent' => ['Firefox']], $stored->headers);
         $this->assertSame(['country_code' => 'IR'], $stored->geo_raw);
+        $this->assertSame(['mobile' => '09120000000'], $stored->extra_attributes);
     }
 
     public function testItBelongsToTheModelThatWasVisitedAndToTheVisitor() : void

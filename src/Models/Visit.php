@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $browser
  * @property string|null $ip
  * @property array<array-key, mixed>|null $geo_raw
+ * @property array<string, mixed>|null $extra_attributes
  * @property int|string|null $visitor_id
  * @property string|null $visitor_type
  * @property int|string|null $visitable_id
@@ -37,7 +38,7 @@ class Visit extends Model
         'method', 'request', 'url', 'route_name', 'referer',
         'languages', 'useragent', 'headers',
         'device', 'platform', 'browser', 'ip',
-        'visitor_id', 'visitor_type', 'geo_raw',
+        'visitor_id', 'visitor_type', 'geo_raw', 'extra_attributes',
     ];
 
     /**
@@ -84,6 +85,7 @@ class Visit extends Model
             'languages' => 'array',
             'headers'   => 'array',
             'geo_raw'   => 'array',
+            'extra_attributes' => 'array',
         ];
     }
 }

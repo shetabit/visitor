@@ -27,11 +27,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   its name. An existing table gets the column from the new `add_route_name_to_visits_table` migration: publish the
   migrations again and run them. The package now requires `illuminate/routing` as well, which its middleware has
   always used.
-- The model the visits are logged with can be configured (`model`, `Shetabit\Visitor\Models\Visit` by default), so
-  an application can extend it with columns of its own. `visit()`, `createVisitLog()` and the `visit()` of the
-  `Visitor` trait take the values of those columns as a new, optional `$attributes` argument. The visitor, the
-  `visitLogs` and `visits` relations and the online checks all use the configured model, which has to extend the
-  package's one. A configuration published before has no `model`, and keeps using the package's model.
+- A visit can keep data of the application beside it, as key and value pairs, in a new `extra_attributes` JSON column:
+  `visit()`, `createVisitLog()` and the `visit()` of the `Visitor` trait take them as a new, optional
+  `$extraAttributes` argument, and the visits can be filtered by them (`where('extra_attributes->mobile', ...)`). An
+  existing table gets the column from the new `add_extra_attributes_to_visits_table` migration: publish the migrations
+  again and run them.
 
 ### Changed
 - **Breaking:** PHP 8.4 is now the minimum required version (was PHP 8.0), and only the last two major versions of

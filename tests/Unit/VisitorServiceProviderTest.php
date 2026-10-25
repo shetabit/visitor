@@ -91,10 +91,30 @@ final class VisitorServiceProviderTest extends TestCase
 
         // Both used to be published under the very same timestamp, which put
         // the column that is added to the table before the table itself.
-        $this->assertCount(3, $migrations);
+        $this->assertCount(4, $migrations);
         $this->assertStringContainsString('create_visits_table', $migrations[0]);
         $this->assertStringContainsString('add_geo_raw_to_visits_table', $migrations[1]);
         $this->assertStringContainsString('add_route_name_to_visits_table', $migrations[2]);
+        $this->assertStringContainsString('add_extra_attributes_to_visits_table', $migrations[3]);
+    }
+
+    public function testTheExtraAttributesColumnIsAddedOnceAndCanBeRolledBack() : void
+    {
+        $migrations = dirname(__DIR__, 2).'/database/migrations';
+        $migration = require $migrations.'/2026_10_25_000001_add_extra_attributes_to_visits_table.php';
+        $table = (string) config('visitor.table_name');
+
+        $this->assertTrue(Schema::hasColumn($table, 'extra_attributes'));
+
+        // A table that already has the column is left alone
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn($table, 'extra_attributes'));
+
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn($table, 'extra_attributes'));
+
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn($table, 'extra_attributes'));
     }
 
     public function testTheRouteNameColumnIsAddedOnceAndCanBeRolledBack() : void

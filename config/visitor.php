@@ -20,21 +20,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Visit Model
-    |--------------------------------------------------------------------------
-    |
-    | The model the visits are logged with. To keep columns of your own beside
-    | a visit (a name, a mobile number, ...), add them to the table, extend
-    | Shetabit\Visitor\Models\Visit with a model that has them in its
-    | $fillable, name it here and hand their values to visit():
-    |
-    |     visitor()->visit($post, ['mobile' => $request->input('mobile')]);
-    |
-    */
-    'model' => \Shetabit\Visitor\Models\Visit::class,
-
-    /*
-    |--------------------------------------------------------------------------
     | List of Drivers
     |--------------------------------------------------------------------------
     |

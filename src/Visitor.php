@@ -14,7 +14,6 @@ use Shetabit\Visitor\Contracts\UserAgentParser;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
 use Shetabit\Visitor\Exceptions\ResolverNotFoundException;
 use Shetabit\Visitor\Models\Visit;
-use Shetabit\Visitor\Support\VisitModel;
 
 class Visitor implements UserAgentParser, GeoIpResolver
 {
@@ -259,12 +258,12 @@ class Visitor implements UserAgentParser, GeoIpResolver
      *
      * Answers with `null` for a request the `except` configuration excludes.
      *
-     * @param array<string, mixed> $attributes columns of the visit model of the configuration to fill beside the ones
-     *                                         the package fills, overriding them; only the fillable ones are kept
+     * @param array<string, mixed> $extraAttributes what the application keeps beside the visit, as key and value
+     *                                              pairs, in its `extra_attributes` column
      *
      * @throws Exception
      */
-    public function visit(Model|null $model = null, array $attributes = []): Visit|null
+    public function visit(Model|null $model = null, array $extraAttributes = []): Visit|null
     {
         foreach ($this->except as $path) {
             if ($this->request->is($path)) {
@@ -272,11 +271,15 @@ class Visitor implements UserAgentParser, GeoIpResolver
             }
         }
 
-        $data = [...$this->prepareLog(), ...$attributes];
+        $data = $this->prepareLog();
+
+        if ($extraAttributes !== []) {
+            $data['extra_attributes'] = $extraAttributes;
+        }
 
         $visit = $model !== null && method_exists($model, 'visitLogs')
             ? $model->visitLogs()->create($data)
-            : VisitModel::name()::query()->create($data);
+            : Visit::create($data);
 
         return $visit instanceof Visit ? $visit : null;
     }
@@ -307,7 +310,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
             return false;
         }
 
-        return VisitModel::name()::query()
+        return Visit::query()
             ->whereHasMorph('visitor', $visitor::class, function (Builder $query) use ($visitor): void {
                 $query->whereKey($visitor->getKey());
             })
