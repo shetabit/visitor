@@ -2,6 +2,7 @@
 
 namespace Shetabit\Visitor\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $method
  * @property array<array-key, mixed>|null $request
  * @property string|null $url
+ * @property-read string|null $decoded_url
  * @property string|null $route_name
  * @property string|null $referer
  * @property array<array-key, mixed>|null $languages
@@ -85,6 +87,22 @@ class Visit extends Model
     public function visitor(): MorphTo
     {
         return $this->morphTo('visitor');
+    }
+
+    /**
+     * The url of the visit as a person reads it, with its percent-encoded characters decoded.
+     *
+     * The url is kept as the request had it, percent-encoded, since decoding it loses what tells an encoded `/`, `&`
+     * or `=` apart from a real one. This decodes it for showing it only: a `+` is kept as it is, and what is not valid
+     * UTF-8 once decoded is replaced, so that it can always be shown.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function decodedUrl(): Attribute
+    {
+        return Attribute::get(
+            fn (): string|null => $this->url === null ? null : mb_scrub(rawurldecode($this->url), 'UTF-8')
+        );
     }
 
     /**

@@ -40,6 +40,20 @@ final class LogVisitsMiddlewareTest extends TestCase
         $this->assertNull($visit->visitable_id);
     }
 
+    public function testItLogsTheUrlOfAPersianPageAsTheRequestHadItAndShowsItDecoded() : void
+    {
+        $this->get('/products/'.rawurlencode('نگاه-به-سایت'))->assertOk();
+
+        $visit = Visit::query()->sole();
+
+        $this->assertSame(
+            'http://localhost/products/%D9%86%DA%AF%D8%A7%D9%87-%D8%A8%D9%87-%D8%B3%D8%A7%DB%8C%D8%AA',
+            $visit->url
+        );
+        $this->assertSame('http://localhost/products/نگاه-به-سایت', $visit->decoded_url);
+        $this->assertSame('products.show', $visit->route_name);
+    }
+
     public function testItLogsTheVisitOfAPhone() : void
     {
         $this->withHeaders(['User-Agent' => self::IPHONE_USER_AGENT])->get('/products')->assertOk();
@@ -148,6 +162,7 @@ final class LogVisitsMiddlewareTest extends TestCase
     {
         $router->middleware([SubstituteBindings::class, LogVisits::class])->group(function (Router $router): void {
             $router->get('/products', fn (): string => 'products')->name('products.index');
+            $router->get('/products/{slug}', fn (string $slug): string => $slug)->name('products.show');
             $router->get('/about', fn (): string => 'about');
             $router->get('/login', fn (): string => 'login');
             $router->get('/posts/{post}', fn (Post $post): string => $post->title)->name('posts.show');
