@@ -32,6 +32,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   `$extraAttributes` argument, and the visits can be filtered by them (`where('extra_attributes->mobile', ...)`). An
   existing table gets the column from the new `add_extra_attributes_to_visits_table` migration: publish the migrations
   again and run them.
+- The model the visits are logged with can be configured (`model`, `Shetabit\Visitor\Models\Visit` by default), so
+  an application can extend it with relations, scopes, accessors or casts of its own. The visitor, the `visitLogs` and
+  `visits` relations and the online checks all use it, and it has to extend the package's model. A configuration
+  published before has no `model`, and keeps using the package's model.
 
 ### Changed
 - **Breaking:** PHP 8.4 is now the minimum required version (was PHP 8.0), and only the last two major versions of

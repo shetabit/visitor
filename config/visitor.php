@@ -20,6 +20,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Visit Model
+    |--------------------------------------------------------------------------
+    |
+    | The model the visits are logged with. Extend
+    | Shetabit\Visitor\Models\Visit and name your model here to give the
+    | visits relations, scopes, accessors or casts of your own, for instance
+    | an accessor that reads a value out of the extra attributes:
+    |
+    |     visitor()->visit($post, ['mobile' => $request->input('mobile')]);
+    |
+    | The visitor, the visitLogs and visits relations and the online checks
+    | all use it. It has to extend the package's model.
+    |
+    */
+    'model' => \Shetabit\Visitor\Models\Visit::class,
+
+    /*
+    |--------------------------------------------------------------------------
     | List of Drivers
     |--------------------------------------------------------------------------
     |

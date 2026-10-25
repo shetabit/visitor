@@ -14,6 +14,7 @@ use Shetabit\Visitor\Contracts\UserAgentParser;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
 use Shetabit\Visitor\Exceptions\ResolverNotFoundException;
 use Shetabit\Visitor\Models\Visit;
+use Shetabit\Visitor\Support\VisitModel;
 
 class Visitor implements UserAgentParser, GeoIpResolver
 {
@@ -279,7 +280,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
 
         $visit = $model !== null && method_exists($model, 'visitLogs')
             ? $model->visitLogs()->create($data)
-            : Visit::create($data);
+            : VisitModel::name()::query()->create($data);
 
         return $visit instanceof Visit ? $visit : null;
     }
@@ -310,7 +311,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
             return false;
         }
 
-        return Visit::query()
+        return VisitModel::name()::query()
             ->whereHasMorph('visitor', $visitor::class, function (Builder $query) use ($visitor): void {
                 $query->whereKey($visitor->getKey());
             })
