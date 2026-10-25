@@ -16,6 +16,22 @@ This is a laravel package to extract and access visitors' information such as `b
 
 This package requires `PHP 8.4+` and supports `Laravel 12+`.
 
+### Features
+
+- [Visitor's information](#how-to-use): browser, platform, device, languages, IP, user agent and the route of the
+  request, through `visitor()` or `$request->visitor()`
+- [Visit logs](#store-logs) of pages, of models and of who visited them, with their visits and unique visitors counted
+- [Route names](#store-logs) kept with every visit, so the visits of a route can be filtered by it
+- [Readable urls](#store-logs) of Persian, Arabic and other pages, decoded for showing them
+- [Online users](#retrieve-and-determine-online-users): who is online, and whether a given user is
+- [Automatic logging](#automatic-logging) of every request, and of the models the router bound, by a middleware
+- [GeoIP enrichment](#geoip-enrichment): the country, region, city and coordinates of a visit's IP
+- [Extra attributes](#extra-attributes): data of your own kept beside a visit, and filtered by
+- [Custom visit model](#custom-visit-model) with relations, scopes, accessors and casts of your own
+- [Database connection and multi-tenancy](#database-connection-and-multi-tenancy): the visits kept in a database of
+  their own, the tenant's for instance
+- [Two user agent parsers](#configure) to choose from, and paths that are not logged
+
 ### Install
 
 Via composer
