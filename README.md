@@ -125,6 +125,15 @@ as well, so they keep being found under it
 Visit::query()->where('route_name', 'posts.show')->update(['route_name' => 'articles.show']);
 ```
 
+The `url` of a visit is kept as the request had it, so the characters of a Persian or Arabic page, among others, are
+percent-encoded in it (`/products/%D9%85%D8%AD%D8%B5%D9%88%D9%84`). Decoding it before keeping it would lose what tells
+an encoded `/`, `&` or `=` apart from a real one, so it is decoded for showing it instead, by `decoded_url`
+
+```php
+$visit->url;         // https://example.com/products/%D9%85%D8%AD%D8%B5%D9%88%D9%84
+$visit->decoded_url; // https://example.com/products/محصول
+```
+
 use `Shetabit\Visitor\Traits\Visitor` in your `User` class, then you can run below codes
 
  ```php
