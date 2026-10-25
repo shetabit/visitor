@@ -3,6 +3,7 @@
 namespace Shetabit\Visitor\Tests\Unit;
 
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Shetabit\Visitor\Models\Visit;
 use Shetabit\Visitor\Tests\TestCase;
 
@@ -18,6 +19,49 @@ final class VisitTest extends TestCase
         config()->set('visitor.table_name', 'another_table');
 
         $this->assertSame('another_table', new Visit()->getTable());
+    }
+
+    public function testItIsKeptInTheDefaultConnectionByDefault() : void
+    {
+        $this->assertNull(new Visit()->getConnectionName());
+    }
+
+    #[DataProvider('defaultConnections')]
+    public function testAConfigurationWithoutAConnectionKeepsItInTheDefaultOne(mixed $connection) : void
+    {
+        config()->set('visitor.connection', $connection);
+
+        $this->assertNull(new Visit()->getConnectionName());
+    }
+
+    /**
+     * @return array<string, array{mixed}>
+     */
+    public static function defaultConnections() : array
+    {
+        return ['null' => [null], 'an empty name' => ['']];
+    }
+
+    public function testItIsKeptInTheConnectionOfTheConfiguration() : void
+    {
+        // A connection that exists, since the migrations are rolled back through it after the test
+        config()->set('visitor.connection', 'testing');
+
+        $this->assertSame('testing', new Visit()->getConnectionName());
+    }
+
+    public function testAModelOfTheApplicationKeepsTheConnectionItNames() : void
+    {
+        config()->set('visitor.connection', 'testing');
+
+        $visit = new class extends Visit {
+            /**
+             * @var string|null
+             */
+            protected $connection = 'another';
+        };
+
+        $this->assertSame('another', $visit->getConnectionName());
     }
 
     public function testItCastsTheColumnsThatHoldJson() : void

@@ -50,7 +50,21 @@ class Visit extends Model
             $this->setTable((string) config('visitor.table_name'));
         }
 
+        if (!isset($this->connection)) {
+            $this->setConnection(self::configuredConnection());
+        }
+
         parent::__construct($attributes);
+    }
+
+    /**
+     * The database connection of the configuration, `null` for the default one.
+     */
+    public static function configuredConnection(): string|null
+    {
+        $connection = config('visitor.connection');
+
+        return is_string($connection) && $connection !== '' ? $connection : null;
     }
 
     /**

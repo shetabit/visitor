@@ -224,6 +224,25 @@ and name it in `config/visitor.php`
 The visitor, the `visitLogs` and `visits` relations and the online checks all use the model of the configuration, so
 `$post->visitLogs()->first()->mobile` works. It has to extend `Shetabit\Visitor\Models\Visit`.
 
+#### Database connection and multi-tenancy
+
+The visits are kept in the default database connection. To keep them in another one, the tenant connection of a
+multi-tenant application for instance, name it in `config/visitor.php`
+
+```php
+'connection' => 'tenant',
+```
+
+The visit model, a model of your own that extends it among them, and the package's migrations all use it: the
+migrations create the visits table in that connection. Migrations you published before this setting existed do not
+know it, so publish them again, or add a `getConnection()` that answers with the connection to the copies you have.
+
+With a tenancy package that makes the tenant's connection the default one while it is active, stancl/tenancy's
+multi-database mode for instance, leave it `null`.
+
+The `online()` scope and `isOnline()` look the visits up together with the table of the visitors, so the visitors (your
+`User` model, for instance) have to be in the same database as the visits for them.
+
 ## Testing
 
 Every pull request and every push to `master` is checked by [GitHub Actions][link-actions]: the test suite runs on

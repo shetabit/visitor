@@ -20,6 +20,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Database Connection
+    |--------------------------------------------------------------------------
+    |
+    | The database connection the visits are kept in, and that the package's
+    | migrations create their table in. Leave it null to use the default
+    | connection, or name another one of config/database.php: the tenant
+    | connection of a multi-tenant application, for instance.
+    |
+    */
+    'connection' => null,
+
+    /*
+    |--------------------------------------------------------------------------
     | Visit Model
     |--------------------------------------------------------------------------
     |

@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Shetabit\Visitor\Models\Visit;
 
 return new class extends Migration
 {
@@ -39,6 +40,14 @@ return new class extends Migration
         Schema::table($this->table(), function (Blueprint $table): void {
             $table->dropColumn('geo_raw');
         });
+    }
+
+    /**
+     * The database connection of the table, as the configuration names it.
+     */
+    public function getConnection(): string|null
+    {
+        return Visit::configuredConnection();
     }
 
     /**
