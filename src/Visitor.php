@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
 use ReflectionClass;
 use Shetabit\Visitor\Contracts\GeoIpResolver;
 use Shetabit\Visitor\Contracts\UserAgentParser;
@@ -105,6 +106,28 @@ class Visitor implements UserAgentParser, GeoIpResolver
     public function url() : string
     {
         return $this->request->fullUrl();
+    }
+
+    /**
+     * Retrieve the route the request matched.
+     *
+     * Answers with `null` for a request that matched no route.
+     */
+    public function route() : Route|null
+    {
+        $route = $this->request->route();
+
+        return $route instanceof Route ? $route : null;
+    }
+
+    /**
+     * Retrieve the name of the route the request matched.
+     *
+     * Answers with `null` for a request that matched no route, or a route that has no name.
+     */
+    public function routeName() : string|null
+    {
+        return $this->route()?->getName();
     }
 
     /**
@@ -305,6 +328,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
             'method' => $this->method(),
             'request' => $this->request(),
             'url' => $this->url(),
+            'route_name' => $this->routeName(),
             'referer' => $this->referer(),
             'languages' => $this->languages(),
             'useragent' => $this->userAgent(),

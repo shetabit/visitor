@@ -4,6 +4,7 @@ namespace Shetabit\Visitor\Facade;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Facade;
 use Shetabit\Visitor\Models\Visit;
 use Shetabit\Visitor\Visitor as VisitorManager;
@@ -15,6 +16,8 @@ use Shetabit\Visitor\Visitor as VisitorManager;
  * @method static array<string, mixed> request()
  * @method static string|null ip()
  * @method static string url()
+ * @method static Route|null route()
+ * @method static string|null routeName()
  * @method static string|null referer()
  * @method static string method()
  * @method static array<string, array<int, string|null>> httpHeaders()

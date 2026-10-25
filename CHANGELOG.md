@@ -22,6 +22,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   `Shetabit\Visitor\Facade\Visitor::SERVICE_NAME`.
 - The `visitor-config` and `visitor-migrations` publish tags, next to the `config` and `migrations` ones the package
   has always used.
+- A visit keeps the name of the route it matched, in a new, indexed `route_name` column, so the visits of a route can
+  be filtered by it. `Visitor::route()` answers with the route of the current request and `Visitor::routeName()` with
+  its name. An existing table gets the column from the new `add_route_name_to_visits_table` migration: publish the
+  migrations again and run them. The package now requires `illuminate/routing` as well, which its middleware has
+  always used.
 - The model the visits are logged with can be configured (`model`, `Shetabit\Visitor\Models\Visit` by default), so
   an application can extend it with columns of its own. `visit()`, `createVisitLog()` and the `visit()` of the
   `Visitor` trait take the values of those columns as a new, optional `$attributes` argument. The visitor, the
