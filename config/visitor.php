@@ -73,15 +73,23 @@ return [
     |
     | When enabled, visits can be enriched with geolocation data stored
     | in the "geo_raw" JSON column. This package ships with a default
-    | resolver (stevebauman/location). You may implement your own by
-    | adding it to the drivers array below. Each driver must implement
-    | Shetabit\Visitor\Contracts\GeoIpResolver.
+    | resolver (stevebauman/location) and a MaxMind one (geoip2/geoip2),
+    | which reads a GeoIP2 or GeoLite2 City database. You may implement
+    | your own by adding it to the resolvers array below. Each resolver
+    | must implement Shetabit\Visitor\Contracts\GeoIpResolver.
     |
     */
     'geoip'   => false,           // disable enrichment by default
     'resolver'=> 'stevebauman',   // default resolver
     'resolvers' => [
         'stevebauman' => \Shetabit\Visitor\Resolvers\GeoIp\SteveBaumanResolver::class,
+        'maxmind'     => \Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver::class,
         'null'        => \Shetabit\Visitor\Resolvers\GeoIp\NullResolver::class,
+    ],
+
+    // the database the maxmind resolver reads, and the languages of the names it answers with, by preference
+    'maxmind' => [
+        'database' => storage_path('app/geoip/GeoLite2-City.mmdb'),
+        'locales'  => ['en'],
     ],
 ];

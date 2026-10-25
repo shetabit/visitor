@@ -43,6 +43,9 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   `null`), the tenant connection of a multi-tenant application for instance. The visit model, a model of the
   application that extends it, and the package's migrations all use it. Migrations published before do not know it:
   publish them again.
+- A `maxmind` GeoIP resolver that reads the location of a visit from a GeoIP2 or GeoLite2 City database through
+  `geoip2/geoip2` (or from MaxMind's web service, when its client is bound instead). The database it reads and the
+  languages of the names it answers with are set under `maxmind` in the config.
 
 ### Changed
 - **Breaking:** PHP 8.4 is now the minimum required version (was PHP 8.0), and only the last two major versions of

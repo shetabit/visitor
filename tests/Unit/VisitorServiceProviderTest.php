@@ -5,8 +5,10 @@ namespace Shetabit\Visitor\Tests\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use InvalidArgumentException;
 use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
 use Shetabit\Visitor\Provider\VisitorServiceProvider;
+use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
 use Shetabit\Visitor\Tests\TestCase;
 use Shetabit\Visitor\Visitor;
 
@@ -61,6 +63,16 @@ final class VisitorServiceProviderTest extends TestCase
         $this->assertSame('stevebauman', config('visitor.resolver'));
         $this->assertArrayHasKey('jenssegers', config('visitor.drivers'));
         $this->assertArrayHasKey('null', config('visitor.resolvers'));
+    }
+
+    public function testTheMaxMindResolverReadsTheDatabaseTheConfigurationNames() : void
+    {
+        config()->set('visitor.maxmind.database', '/nowhere/GeoLite2-City.mmdb');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('/nowhere/GeoLite2-City.mmdb');
+
+        app(MaxMindResolver::class);
     }
 
     public function testItPublishesTheConfigurationFile() : void
