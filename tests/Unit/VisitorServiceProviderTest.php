@@ -3,6 +3,7 @@
 namespace Shetabit\Visitor\Tests\Unit;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use InvalidArgumentException;
@@ -65,14 +66,31 @@ final class VisitorServiceProviderTest extends TestCase
         $this->assertArrayHasKey('null', config('visitor.resolvers'));
     }
 
+    public function testTheMaxMindResolverIsSharedForTheLifeOfTheApplication() : void
+    {
+        $resolver = $this->app->make(MaxMindResolver::class);
+
+        // It is bound `singleton`, so a long running worker keeps the database
+        // it opened for every request instead of opening it again.
+        $this->app->forgetScopedInstances();
+
+        $this->assertSame($resolver, $this->app->make(MaxMindResolver::class));
+    }
+
     public function testTheMaxMindResolverReadsTheDatabaseTheConfigurationNames() : void
     {
+        Exceptions::fake();
+
         config()->set('visitor.maxmind.database', '/nowhere/GeoLite2-City.mmdb');
 
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('/nowhere/GeoLite2-City.mmdb');
+        $this->assertNull($this->app->make(MaxMindResolver::class)->resolve('24.24.24.24'));
 
-        app(MaxMindResolver::class);
+        Exceptions::assertReported(
+            static fn (InvalidArgumentException $exception): bool => str_contains(
+                $exception->getMessage(),
+                '/nowhere/GeoLite2-City.mmdb'
+            )
+        );
     }
 
     public function testItPublishesTheConfigurationFile() : void

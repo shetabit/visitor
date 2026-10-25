@@ -6,6 +6,7 @@ use GeoIp2\Exception\AddressNotFoundException;
 use GeoIp2\Model\City;
 use GeoIp2\Model\Country;
 use GeoIp2\ProviderInterface;
+use Throwable;
 
 /**
  * A MaxMind provider that knows the IPs it was given, as a City database
@@ -14,7 +15,8 @@ use GeoIp2\ProviderInterface;
 class FakeGeoIp2Provider implements ProviderInterface
 {
     /**
-     * @param array<string, array<string, mixed>> $records the raw City record of each IP
+     * @param array<string, array<string, mixed>|Throwable> $records the raw City record of each IP, or what looking
+     *        it up fails with
      */
     public function __construct(private readonly array $records)
     {
@@ -27,11 +29,14 @@ class FakeGeoIp2Provider implements ProviderInterface
 
     public function city(string $ipAddress): City
     {
-        if (!isset($this->records[$ipAddress])) {
-            throw new AddressNotFoundException("The address {$ipAddress} is not in the database.");
+        $record = $this->records[$ipAddress]
+            ?? throw new AddressNotFoundException("The address {$ipAddress} is not in the database.");
+
+        if ($record instanceof Throwable) {
+            throw $record;
         }
 
-        return new City($this->records[$ipAddress]);
+        return new City($record);
     }
 
     /**

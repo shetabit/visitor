@@ -95,6 +95,11 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
 - **`LogVisits`:** a request that matches no route ended in a call to `parameters()` on `null`.
 - **`Visitor` trait:** the `Model` type hint of `visit()` was not imported, so passing a model in ended in a
   `TypeError`, and `scopeOnline()` did not return the query it built.
+- **`MaxMindResolver`:** a database that was missing or could not be read, or a web service that could not answer,
+  failed every request that logs a visit: the binding opened the database while the resolver was built, and nothing
+  caught what a lookup threw. The resolver opens the database at its first lookup now, reports what fails and leaves
+  the visit without its location, and opens a database that failed to open again at the next lookup. Its constructor
+  takes a closure that opens the reader or the client, as well as the reader or the client itself.
 
 ### Removed
 - **Breaking:** `Shetabit\Visitor\Provider\AgentServiceProvider` and the `Agent` facade. The facade was declared
