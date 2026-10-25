@@ -6,6 +6,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
 use Shetabit\Visitor\Middlewares\LogVisits;
 use Shetabit\Visitor\Models\Visit;
+use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
+use Shetabit\Visitor\Tests\Fixtures\FakeGeoIp2Provider;
 use Shetabit\Visitor\Tests\TestCase;
 use Stevebauman\Location\Facades\Location;
 use Stevebauman\Location\LocationServiceProvider;
@@ -47,6 +49,32 @@ final class GeoIpEnrichmentTest extends TestCase
         $this->get('/products')->assertOk();
 
         $this->assertNull(Visit::query()->sole()->geo_raw);
+    }
+
+    public function testItAddsTheLocationTheMaxMindDatabaseHoldsForTheVisitorToTheVisit() : void
+    {
+        config()->set('visitor.geoip', true);
+        config()->set('visitor.resolver', 'maxmind');
+
+        $this->app->instance(
+            MaxMindResolver::class,
+            new MaxMindResolver(new FakeGeoIp2Provider(['127.0.0.1' => FakeGeoIp2Provider::paris('127.0.0.1')]))
+        );
+
+        $this->get('/products')->assertOk();
+
+        $this->assertSame(
+            [
+                'ip' => '127.0.0.1',
+                'country_code' => 'FR',
+                'country_name' => 'France',
+                'region_name' => 'Île-de-France',
+                'city_name' => 'Paris',
+                'latitude' => 48.8566,
+                'longitude' => 2.3522,
+            ],
+            Visit::query()->sole()->geo_raw
+        );
     }
 
     public function testItAsksNoResolverWhileTheEnrichmentIsDisabled() : void

@@ -25,7 +25,8 @@ This package requires `PHP 8.4+` and supports `Laravel 12+`.
 - [Readable urls](#store-logs) of Persian, Arabic and other pages, decoded for showing them
 - [Online users](#retrieve-and-determine-online-users): who is online, and whether a given user is
 - [Automatic logging](#automatic-logging) of every request, and of the models the router bound, by a middleware
-- [GeoIP enrichment](#geoip-enrichment): the country, region, city and coordinates of a visit's IP
+- [GeoIP enrichment](#geoip-enrichment): the country, region, city and coordinates of a visit's IP, through
+  stevebauman/location or a MaxMind database
 - [Extra attributes](#extra-attributes): data of your own kept beside a visit, and filtered by
 - [Custom visit model](#custom-visit-model) with relations, scopes, accessors and casts of your own
 - [Database connection and multi-tenancy](#database-connection-and-multi-tenancy): the visits kept in a database of
@@ -197,6 +198,40 @@ composer require stevebauman/location
 
 The bundled resolver hands the country, the region, the city and the coordinates of a visit over. You can write your
 own by implementing `Shetabit\Visitor\Contracts\GeoIpResolver` and adding it to the `resolvers` array of the config.
+
+##### MaxMind
+
+The `maxmind` resolver reads the location from a [GeoIP2 or GeoLite2 City database](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
+of your own, through [geoip2/geoip2](https://github.com/maxmind/GeoIP2-php), so no request leaves your application.
+
+```bash
+composer require geoip2/geoip2
+```
+
+```php
+'geoip'    => true,
+'resolver' => 'maxmind',
+'maxmind'  => [
+    'database' => storage_path('app/geoip/GeoLite2-City.mmdb'), // where you keep the downloaded database
+    'locales'  => ['en'], // the languages of the country, region and city names, by preference
+],
+```
+
+The database is opened once and kept open for the life of the application, so a long-running worker, such as an
+[Octane](https://laravel.com/docs/octane) one, keeps reading the copy it opened until it is restarted. MaxMind updates
+its databases regularly, and [geoipupdate](https://github.com/maxmind/geoipupdate) can keep yours up to date.
+
+To ask MaxMind's web service instead of a database, bind the resolver to its client in a service provider of your
+application
+
+```php
+use GeoIp2\WebService\Client;
+use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
+
+$this->app->singleton(MaxMindResolver::class, fn () => new MaxMindResolver(new Client($accountId, $licenseKey)));
+```
+
+An IP the database does not hold, such as a private one, leaves the location of its visit empty.
 
 #### Extra attributes
 

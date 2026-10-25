@@ -30,6 +30,7 @@
         "ua-parser/uap-php": "^3.10"
     },
     "require-dev": {
+        "geoip2/geoip2": "^3.4",
         "larastan/larastan": "^3.10",
         "orchestra/testbench": "^10.0|^11.0",
         "phpcsstandards/php_codesniffer": "^4.0",
@@ -39,6 +40,7 @@
         "stevebauman/location": "^7.6"
     },
     "suggest": {
+        "geoip2/geoip2": "Needed by the MaxMind resolver that enriches a visit with the location of its IP, read from a GeoIP2 or GeoLite2 City database",
         "stevebauman/location": "Needed by the GeoIP resolver that enriches a visit with the location of its IP"
     },
     "autoload": {

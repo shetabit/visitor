@@ -2,9 +2,11 @@
 
 namespace Shetabit\Visitor\Provider;
 
+use GeoIp2\Database\Reader;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
+use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
 use Shetabit\Visitor\Visitor;
 
 class VisitorServiceProvider extends ServiceProvider
@@ -65,6 +67,20 @@ class VisitorServiceProvider extends ServiceProvider
 
         // Allow the visitor to be resolved and injected by its class name too
         $this->app->alias(VisitorFacade::SERVICE_NAME, Visitor::class);
+
+        /**
+         * The MaxMind resolver keeps its database open for the life of the
+         * application rather than opening it again for every request. To
+         * resolve through another GeoIp2\ProviderInterface, such as MaxMind's
+         * web service client, bind the resolver again with that instead.
+         */
+        $this->app->singleton(
+            MaxMindResolver::class,
+            static fn (): MaxMindResolver => new MaxMindResolver(new Reader(
+                (string) config('visitor.maxmind.database'),
+                (array) config('visitor.maxmind.locales', ['en'])
+            ))
+        );
     }
 
     /**
