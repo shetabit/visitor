@@ -4,6 +4,8 @@ namespace Shetabit\Visitor\Tests\Feature;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Exceptions;
+use InvalidArgumentException;
 use Shetabit\Visitor\Middlewares\LogVisits;
 use Shetabit\Visitor\Models\Visit;
 use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
@@ -75,6 +77,20 @@ final class GeoIpEnrichmentTest extends TestCase
             ],
             Visit::query()->sole()->geo_raw
         );
+    }
+
+    public function testItLogsTheVisitWithoutItsLocationWhenTheMaxMindDatabaseIsMissing() : void
+    {
+        Exceptions::fake();
+
+        config()->set('visitor.geoip', true);
+        config()->set('visitor.resolver', 'maxmind');
+        config()->set('visitor.maxmind.database', '/nowhere/GeoLite2-City.mmdb');
+
+        $this->get('/products')->assertOk();
+
+        $this->assertNull(Visit::query()->sole()->geo_raw);
+        Exceptions::assertReported(InvalidArgumentException::class);
     }
 
     public function testItAsksNoResolverWhileTheEnrichmentIsDisabled() : void

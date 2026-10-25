@@ -217,9 +217,10 @@ composer require geoip2/geoip2
 ],
 ```
 
-The database is opened once and kept open for the life of the application, so a long-running worker, such as an
-[Octane](https://laravel.com/docs/octane) one, keeps reading the copy it opened until it is restarted. MaxMind updates
-its databases regularly, and [geoipupdate](https://github.com/maxmind/geoipupdate) can keep yours up to date.
+The database is opened at the first lookup and kept open for the life of the application, so a long-running worker,
+such as an [Octane](https://laravel.com/docs/octane) one, keeps reading the copy it opened until it is restarted.
+MaxMind updates its databases regularly, and [geoipupdate](https://github.com/maxmind/geoipupdate) can keep yours up to
+date.
 
 To ask MaxMind's web service instead of a database, bind the resolver to its client in a service provider of your
 application
@@ -231,7 +232,10 @@ use Shetabit\Visitor\Resolvers\GeoIp\MaxMindResolver;
 $this->app->singleton(MaxMindResolver::class, fn () => new MaxMindResolver(new Client($accountId, $licenseKey)));
 ```
 
-An IP the database does not hold, such as a private one, leaves the location of its visit empty.
+An IP the database does not hold, such as a private one, leaves the location of its visit empty. So does a database
+that is missing or cannot be read, on a fresh server that has not downloaded it yet for instance, or a web service
+that cannot answer: the visit is still logged, and the error is reported to your exception handler, which logs it. The
+resolver tries to open the database again at the next visit, so it picks it up as soon as it is in place.
 
 #### Extra attributes
 

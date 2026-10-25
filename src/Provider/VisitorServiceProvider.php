@@ -69,14 +69,15 @@ class VisitorServiceProvider extends ServiceProvider
         $this->app->alias(VisitorFacade::SERVICE_NAME, Visitor::class);
 
         /**
-         * The MaxMind resolver keeps its database open for the life of the
-         * application rather than opening it again for every request. To
-         * resolve through another GeoIp2\ProviderInterface, such as MaxMind's
-         * web service client, bind the resolver again with that instead.
+         * The MaxMind resolver opens its database at the first lookup and keeps
+         * it open for the life of the application, rather than opening it again
+         * for every request. To resolve through another GeoIp2\ProviderInterface,
+         * such as MaxMind's web service client, bind the resolver again with
+         * that instead.
          */
         $this->app->singleton(
             MaxMindResolver::class,
-            static fn (): MaxMindResolver => new MaxMindResolver(new Reader(
+            static fn (): MaxMindResolver => new MaxMindResolver(static fn (): Reader => new Reader(
                 (string) config('visitor.maxmind.database'),
                 (array) config('visitor.maxmind.locales', ['en'])
             ))
