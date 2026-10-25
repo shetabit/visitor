@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Shetabit\Visitor\Models\Visit;
 
 return new class extends Migration
 {
@@ -40,6 +41,14 @@ return new class extends Migration
             $table->dropIndex(['route_name']);
             $table->dropColumn('route_name');
         });
+    }
+
+    /**
+     * The database connection of the table, as the configuration names it.
+     */
+    public function getConnection(): string|null
+    {
+        return Visit::configuredConnection();
     }
 
     /**

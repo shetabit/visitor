@@ -36,6 +36,10 @@ Updates should follow the [Keep a CHANGELOG](http://keepachangelog.com/) princip
   an application can extend it with relations, scopes, accessors or casts of its own. The visitor, the `visitLogs` and
   `visits` relations and the online checks all use it, and it has to extend the package's model. A configuration
   published before has no `model`, and keeps using the package's model.
+- The database connection the visits are kept in can be configured (`connection`, the default connection when it is
+  `null`), the tenant connection of a multi-tenant application for instance. The visit model, a model of the
+  application that extends it, and the package's migrations all use it. Migrations published before do not know it:
+  publish them again.
 
 ### Changed
 - **Breaking:** PHP 8.4 is now the minimum required version (was PHP 8.0), and only the last two major versions of
