@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property string|null $method
  * @property array<array-key, mixed>|null $request
  * @property string|null $url
+ * @property string|null $route_name
  * @property string|null $referer
  * @property array<array-key, mixed>|null $languages
  * @property string|null $useragent
@@ -33,7 +34,7 @@ class Visit extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'method', 'request', 'url', 'referer',
+        'method', 'request', 'url', 'route_name', 'referer',
         'languages', 'useragent', 'headers',
         'device', 'platform', 'browser', 'ip',
         'visitor_id', 'visitor_type', 'geo_raw',
