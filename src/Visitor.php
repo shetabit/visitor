@@ -107,6 +107,16 @@ class Visitor implements UserAgentParser, GeoIpResolver
     }
 
     /**
+     * Retrieve the name of the route the request matched.
+     *
+     * Answers with `null` for a request that matched no route, or a route that has no name.
+     */
+    public function route() : string|null
+    {
+        return $this->request->route()?->getName();
+    }
+
+    /**
      * Retrieve request's referer
      */
     public function referer() : string|null
@@ -301,6 +311,7 @@ class Visitor implements UserAgentParser, GeoIpResolver
             'method' => $this->method(),
             'request' => $this->request(),
             'url' => $this->url(),
+            'route' => $this->route(),
             'referer' => $this->referer(),
             'languages' => $this->languages(),
             'useragent' => $this->userAgent(),

@@ -4,6 +4,7 @@ namespace Shetabit\Visitor\Tests\Unit;
 
 use Exception;
 use Illuminate\Foundation\Application;
+use Illuminate\Routing\Route;
 use Shetabit\Visitor\Exceptions\DriverNotFoundException;
 use Shetabit\Visitor\Exceptions\ResolverNotFoundException;
 use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
@@ -48,6 +49,27 @@ final class VisitorTest extends TestCase
         $this->assertSame(self::FIREFOX_USER_AGENT, $visitor->userAgent());
         $this->assertSame('127.0.0.1', $visitor->ip());
         $this->assertArrayHasKey('user-agent', $visitor->httpHeaders());
+    }
+
+    public function testItReadsTheNameOfTheRouteTheRequestMatched() : void
+    {
+        $route = new Route('GET', '/products', fn (): string => 'products')->name('products.index');
+        $this->swapRequest()->setRouteResolver(fn (): Route => $route);
+
+        $this->assertSame('products.index', $this->visitor()->route());
+    }
+
+    public function testItReadsNoRouteNameOfARequestThatMatchedNoRoute() : void
+    {
+        $this->assertNull($this->visitor()->route());
+    }
+
+    public function testItReadsNoRouteNameOfARouteWithoutOne() : void
+    {
+        $route = new Route('GET', '/products', fn (): string => 'products');
+        $this->swapRequest()->setRouteResolver(fn (): Route => $route);
+
+        $this->assertNull($this->visitor()->route());
     }
 
     public function testItReadsTheRefererOfTheRequestAndNotOfTheSuperGlobals() : void
@@ -194,6 +216,7 @@ final class VisitorTest extends TestCase
         $this->assertInstanceOf(Visit::class, $visit);
         $this->assertSame('GET', $visit->method);
         $this->assertSame('http://localhost/products', $visit->url);
+        $this->assertNull($visit->route);
         $this->assertSame('a-device', $visit->device);
         $this->assertSame('a-platform', $visit->platform);
         $this->assertSame('a-browser', $visit->browser);

@@ -3,6 +3,7 @@
 namespace Shetabit\Visitor\Tests\Unit;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Shetabit\Visitor\Facade\Visitor as VisitorFacade;
 use Shetabit\Visitor\Provider\VisitorServiceProvider;
@@ -90,8 +91,27 @@ final class VisitorServiceProviderTest extends TestCase
 
         // Both used to be published under the very same timestamp, which put
         // the column that is added to the table before the table itself.
-        $this->assertCount(2, $migrations);
+        $this->assertCount(3, $migrations);
         $this->assertStringContainsString('create_visits_table', $migrations[0]);
         $this->assertStringContainsString('add_geo_raw_to_visits_table', $migrations[1]);
+        $this->assertStringContainsString('add_route_to_visits_table', $migrations[2]);
+    }
+
+    public function testTheRouteColumnIsAddedOnceAndCanBeRolledBack() : void
+    {
+        $migration = require dirname(__DIR__, 2).'/database/migrations/2026_10_25_000000_add_route_to_visits_table.php';
+        $table = (string) config('visitor.table_name');
+
+        $this->assertTrue(Schema::hasColumn($table, 'route'));
+
+        // A table that already has the column is left alone
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn($table, 'route'));
+
+        $migration->down();
+        $this->assertFalse(Schema::hasColumn($table, 'route'));
+
+        $migration->up();
+        $this->assertTrue(Schema::hasColumn($table, 'route'));
     }
 }

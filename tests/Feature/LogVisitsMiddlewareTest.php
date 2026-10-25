@@ -26,6 +26,7 @@ final class LogVisitsMiddlewareTest extends TestCase
 
         $this->assertSame('GET', $visit->method);
         $this->assertSame('http://localhost/products?page=2', $visit->url);
+        $this->assertSame('products.index', $visit->route);
         $this->assertSame(['page' => '2'], $visit->request);
         $this->assertSame('https://example.com/from', $visit->referer);
         $this->assertSame(self::FIREFOX_USER_AGENT, $visit->useragent);
@@ -59,6 +60,30 @@ final class LogVisitsMiddlewareTest extends TestCase
 
         $this->assertTrue($post->is($visit->visitable));
         $this->assertSame(1, $post->visitLogs()->count());
+        $this->assertSame('posts.show', $visit->route);
+    }
+
+    public function testItLogsNoRouteNameForARouteWithoutOne() : void
+    {
+        $this->get('/about')->assertOk();
+
+        $this->assertNull(Visit::query()->sole()->route);
+    }
+
+    public function testTheVisitsOfARouteCanBeFilteredByItsName() : void
+    {
+        $post = $this->createPost();
+
+        // The visitor is bound for the length of one request, and the test
+        // client sends them all to one application: it is forgotten between
+        // them the way the framework does between the requests of a worker.
+        foreach (["/posts/{$post->getKey()}", '/products', "/posts/{$post->getKey()}"] as $uri) {
+            $this->get($uri)->assertOk();
+            $this->app->forgetScopedInstances();
+        }
+
+        $this->assertSame(2, Visit::query()->where('route', 'posts.show')->count());
+        $this->assertSame(1, Visit::query()->where('route', 'products.index')->count());
     }
 
     public function testItLogsOneVisitPerRequest() : void
@@ -122,9 +147,10 @@ final class LogVisitsMiddlewareTest extends TestCase
     protected function defineRoutes($router) : void
     {
         $router->middleware([SubstituteBindings::class, LogVisits::class])->group(function (Router $router): void {
-            $router->get('/products', fn (): string => 'products');
+            $router->get('/products', fn (): string => 'products')->name('products.index');
+            $router->get('/about', fn (): string => 'about');
             $router->get('/login', fn (): string => 'login');
-            $router->get('/posts/{post}', fn (Post $post): string => $post->title);
+            $router->get('/posts/{post}', fn (Post $post): string => $post->title)->name('posts.show');
         });
 
         $router->get('/visitor-of-the-request', function (): array {

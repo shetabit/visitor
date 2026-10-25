@@ -56,6 +56,7 @@ We have the below methods to retrieve a visitor's information:
 - `languages` : language's name
 - `ip` : client's ip
 - `request` : the whole request inputs
+- `route` : the name of the route the request matched
 - `useragent` : the whole useragent
 - `isOnline` : determines if current (or given) user is online
 
@@ -103,6 +104,16 @@ $model->visitLogs()->distinct('ip')->count('ip');
 
 // by user's model
 $model->visitLogs()->distinct('visitor_id')->count('visitor_id');
+```
+
+Every visit keeps the name of the route it matched in its `route` column (`null` for a route without a name), so the
+visits of a route can be filtered by it
+
+```php
+use Shetabit\Visitor\Models\Visit;
+
+Visit::query()->where('route', 'posts.show')->count(); // visits of the posts.show route
+visitor()->route(); // the name of the route of the current request
 ```
 
 use `Shetabit\Visitor\Traits\Visitor` in your `User` class, then you can run below codes
