@@ -234,7 +234,36 @@ final class VisitorTest extends TestCase
         $this->assertSame(['a-language'], $visit->languages);
         $this->assertSame('127.0.0.1', $visit->ip);
         $this->assertNull($visit->geo_raw);
+        $this->assertNull($visit->extra_attributes);
         $this->assertSame(1, Visit::query()->count());
+    }
+
+    public function testAVisitKeepsTheExtraAttributesOfTheApplication() : void
+    {
+        $visit = $this->visitor()->visit(null, ['name' => 'Mahdi', 'mobile' => '09120000000']);
+
+        $this->assertInstanceOf(Visit::class, $visit);
+        $stored = Visit::query()->whereKey($visit->getKey())->sole();
+
+        $this->assertSame(['name' => 'Mahdi', 'mobile' => '09120000000'], $stored->extra_attributes);
+    }
+
+    public function testTheExtraAttributesDoNotTakeThePlaceOfTheColumnsOfTheVisit() : void
+    {
+        $visit = $this->visitor()->visit(null, ['url' => 'https://example.com/another-page']);
+
+        $this->assertInstanceOf(Visit::class, $visit);
+        $this->assertSame('http://localhost/products', $visit->url);
+        $this->assertSame(['url' => 'https://example.com/another-page'], $visit->extra_attributes);
+    }
+
+    public function testTheVisitsCanBeFilteredByTheirExtraAttributes() : void
+    {
+        $this->visitor()->visit(null, ['mobile' => '09120000000']);
+        $this->visitor()->visit(null, ['mobile' => '09350000000']);
+        $this->visitor()->visit();
+
+        $this->assertSame(1, Visit::query()->where('extra_attributes->mobile', '09120000000')->count());
     }
 
     public function testItAddsTheLocationToAVisitWhileTheEnrichmentIsEnabled() : void

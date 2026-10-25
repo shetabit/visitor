@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Shetabit\Visitor\Models\Visit;
+use Shetabit\Visitor\Support\VisitModel;
 
 /**
  * Turns a model into someone who visits, under the `visitLogs` name.
@@ -21,7 +22,7 @@ trait CanVisit
      */
     public function visitLogs(): MorphMany
     {
-        return $this->morphMany(Visit::class, 'visitor');
+        return $this->morphMany(VisitModel::name(), 'visitor');
     }
 
     /**

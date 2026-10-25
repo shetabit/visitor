@@ -57,6 +57,30 @@ final class TraitsTest extends TestCase
         $this->assertTrue($post->is($visit?->visitable));
     }
 
+    public function testAVisitableModelLogsTheExtraAttributesOfItsVisit() : void
+    {
+        $post = $this->createPost();
+
+        $visit = $post->createVisitLog(null, ['mobile' => '09120000000']);
+
+        $this->assertInstanceOf(Visit::class, $visit);
+        $this->assertSame(['mobile' => '09120000000'], $visit->extra_attributes);
+        $this->assertTrue($post->is($visit->visitable));
+    }
+
+    public function testAVisitorLogsTheExtraAttributesOfItsVisit() : void
+    {
+        $user = $this->createUser();
+        $post = $this->createPost();
+
+        $visit = $user->visit($post, ['name' => 'Mahdi']);
+
+        $this->assertInstanceOf(Visit::class, $visit);
+        $this->assertSame(['name' => 'Mahdi'], $visit->extra_attributes);
+        $this->assertTrue($user->is($visit->visitor));
+        $this->assertTrue($post->is($visit->visitable));
+    }
+
     public function testAVisitorIsOnlineRightAfterAVisit() : void
     {
         $user = $this->createUser();

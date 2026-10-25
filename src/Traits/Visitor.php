@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Shetabit\Visitor\Models\Visit;
+use Shetabit\Visitor\Support\VisitModel;
 
 /**
  * Turns a model into someone who visits, a user for instance.
@@ -21,15 +22,17 @@ trait Visitor
      */
     public function visits(): MorphMany
     {
-        return $this->morphMany(Visit::class, 'visitor');
+        return $this->morphMany(VisitModel::name(), 'visitor');
     }
 
     /**
      * Create a visit log.
+     *
+     * @param array<string, mixed> $extraAttributes what the application keeps beside the visit, as key and value pairs
      */
-    public function visit(Model|null $visitable = null): Visit|null
+    public function visit(Model|null $visitable = null, array $extraAttributes = []): Visit|null
     {
-        return visitor()->setVisitor($this)->visit($visitable);
+        return visitor()->setVisitor($this)->visit($visitable, $extraAttributes);
     }
 
     /**
